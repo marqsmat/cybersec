@@ -1,0 +1,23 @@
+Vídeo do Gabriel Pato de dicas para começar em segurança da informação:
+    . Conferências de InfoSec: BlackHat, Defcon, Bsides.
+    . ler "bugbounty write-ups" de hackers. como eles conseguiram identificar a falha?
+
+Dicas vindas do Reddit:
+    . OSCP certification. Offensive Security Certified Professional
+    . TryHackMe
+    . HackTheBox
+    . https://github.com/brootware/awesome-cyber-security-university
+    . https://github.com/Berkanktk/CyberSecurity
+    . Sec+ Cysa+ Pentest+ EJPT certifications to check out
+    . Also start learning about what your interested in, read blogs, articles, what videos, listen to podcasts, just start learning about it
+    . SANS Institute is the most trusted resource for cybersecurity training, certifications and research. Offering more than 60 courses across all practice areas
+    . SANS has BA's now as well that you can get the gi bill to pay. IMHO there training is top notch
+    . MSISE SANS - Master of Science in Information Security
+    . https://shellsharks.com/getting-into-information-security#getting-into-infosec-playbook
+    . https://www.reddit.com/r/SecurityCareerAdvice/comments/14k9vqx/how_to_get_started_in_cybersecurity_zero_to_hero/?xpromo_edp=enabled
+    . CISCO Netacademy
+    . I did the traditional route... A+ce, Security+ce, and then moved into a specialty like CHFI. I then started getting into Offensive ops and moved away from "after" the incident occurs - to causing the incident to occur. Really depends. I think starting with the HOST and moving out towards the greater network and apps is good.  Then again -Learning Linux, networking, and a cloud based cert is always good right now - since everyone is moving into the cloud. The 4 you have up there... are just fine... I would replace #4 with a Cloud based cert.... like AWS Security Specialty. CCNA, Linux, and Python are all good to have on your resume... remember - ALL IT professionals started somewhere - plan your attack on where you see yourself for the next 5 yrs... things change, but make sure your certs will allow it & you can stay dynamic in an ever changing environment!
+    . CompTIA suite
+    . https://www.coursera.org/professional-certificates/ibm-cybersecurity-analyst
+    . If you're not in IT but you're considering a career in cybersecurity, whether it's because you're caught up in the buzz or genuinely interested, here's a tip: start your journey in roles like system administration, IT support, helpdesk, or anything else involving networks and servers. This is something really overlooked in the marketing/HR whatever cybersecurity hype business.  So, that's just my personal piece of advice. It's a fantastic field, and you're bound to learn heaps regardless of the path you choose. But don't get too dazzled by the glamour. Be patient, start from the basics, and work your way up. It's worth it, trust me.
+    . https://www.reddit.com/r/cybersecurity/comments/137xf0d/comment/jiwkv8a/?xpromo_edp=enabled
