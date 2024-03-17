@@ -201,4 +201,26 @@ sudo journalctl
 
 ``Sticky bits'' add another level of security for files and directories. Read about it later.
 
+\pagebreak
+
+\section{HackTheBox}
+
+\subsection{Meow}
+
+What tool do we use to test our connection to the target with an ICMP echo request?
+\begin{bash}
+ping "10.129.74.130"
+\end{bash}
+
+What service do we identify on port 23/tcp during our scans?
+\begin{bash}
+nmap -p 23 "10.129.74.130"
+\end{bash}
+
+What username is able to log into the target over telnet with a blank password?
+\begin{bash}
+telnet -l root "10.129.74.130" 23
+cat flag.txt
+\end{bash}
+
 \end{document}
