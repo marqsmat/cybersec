@@ -1,0 +1,11 @@
+Tier 0 (Free) Modules in order:
+    Introduction to Academy (OK)
+    Linux Fundamentals
+    Getting Started
+    Windows Fundamentals
+    Introduction to Networking
+    Web Requests
+    Introduction to Web Applications
+    Learning Process
+    Setting Up
+    Vulnerability Assessment

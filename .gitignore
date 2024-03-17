@@ -7,4 +7,6 @@
 **/*.log
 **/*.out
 **/*.toc
+**/*.listing
 **/*.fdb_latexmk
+**/_minted*

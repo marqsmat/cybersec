@@ -1,6 +1,32 @@
 \documentclass[a4paper,12pt]{article}
 \input{preamble}
 
+%\definecolor{LightGray}{gray}{0.9}  % requires xcolor package
+%\usepackage{minted}
+
+% https://tex.stackexchange.com/questions/173850/problem-in-adding-a-background-color-in-a-minted-environment
+\usepackage{tcolorbox}
+\tcbuselibrary{minted,skins}
+\newtcblisting{bash}[1][]{
+  listing engine=minted,
+  colback=bashcodebg,
+  colframe=black!70,
+  listing only,
+  minted style=colorful,
+  minted language=bash,
+  minted options={linenos=true,numbersep=3mm,texcl=true,#1},
+  left=5mm,enhanced,
+  overlay={\begin{tcbclipinterior}\fill[black!25] (frame.south west)
+            rectangle ([xshift=5mm]frame.north west);\end{tcbclipinterior}}
+}
+\definecolor{bashcodebg}{rgb}{0.85,0.85,0.85}
+
+\newcommand{\bashinline}[1]{%
+\colorbox{bashcodebg}{%
+\parbox[b][0.6em]{\widthof{\mintinline{coq}{#1}}}{\mintinline{coq}{#1}}%
+}%
+}
+
 \title{\Huge{\textbf{CyberSec}}}
 \author{Mateus Marques}
 
@@ -8,17 +34,66 @@
 
 \maketitle
 
-\section{oi}
+\section{Linux Fundamentals}
 
-ok
+Command \bashinline{uname -a} to discover which Linux distribution you are in.
 
+\n
 
-%%%-----
-%%% Referências bibliográficas
-%%%-----
-%\addcontentsline{toc}{chapter}{\bibname}
-%%\bibliographystyle{abntex2-num}
-%\bibliography{citations}
-%\bibliographystyle{ieeetr}
+The \bashinline{PS1} variable can be modified to display useful information, such as full hostname (IP addresses in some cases) and date.
+
+\n
+
+To find help about Linux, have in mind \bashinline{man} and \bashinline{apropos}.
+
+\n
+
+Commands that display system information:
+\begin{bash}
+whoami, id, hostname, hostnamectl (systemd), uname, pwd, ifconfig,
+ip, netstat, ss, ps, who, env, lsblk, lsusb, lsof, lspci.
+\end{bash}
+
+The command \bashinline{uname -r} can be useful, because we can search for a kernel specific version exploit. Example: search for ``4.15.0-99-generic exploit'', and the first \href{https://www.exploit-db.com/exploits/47163}{result} immediately appears useful to us.
+
+\n
+
+Connect to VPN (\bashinline{sudo} is necessary):
+\begin{bash}
+sudo openvpn academy-regular.ovpn
+\end{bash}
+
+To connect via SSH:
+\begin{bash}
+ssh [username]@[IP address]
+\end{bash}
+
+The command \bashinline{stat} displays metadata about files, for example its inode (index number), birth, last modification, etc.
+
+\n
+
+The \bashinline{tree} command is much more useful than listing one directory by one with \bashinline{ls}.
+
+\n
+
+Commands for file searching: \bashinline{which, find, locate}.
+
+\n
+
+What is the name of the config file that has been created after \bashinline{2020-03-03} and is smaller than \bashinline{28k} but larger than \bashinline{25k}?
+\begin{bash}
+find / -type f -name *.conf -size +25k -size -28k \
+-exec ls -la {} \; 2>/dev/null
+\end{bash}
+
+If we try to use the argument \bashinline{-newerBt 2020-03-03} we get
+``\texttt{find: This system does not provide a way to find the birth time of a file.}''
+
+\n
+
+How many files exist on the system that have the \bashinline{".bak"} extension?
+\begin{bash}
+find / -type f -name *.bak 2>/dev/null | wc -l
+\end{bash}
 
 \end{document}
