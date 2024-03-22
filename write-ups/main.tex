@@ -318,14 +318,13 @@ smbclient -L 10.129.71.114
 Password: (empty)
         Sharename       Type      Comment
         ---------       ----      -------
-        ADMIN$          Disk      Remote Admin
-        C$              Disk      Default share
-        IPC$            IPC       Remote IPC
+        ADMIN\$         Disk      Remote Admin
+        C\$             Disk      Default share
+        IPC\$           IPC       Remote IPC
         WorkShares      Disk
 \end{bash}
 
 What is the name of the share we are able to access in the end with a blank password? WorkShares.
-
 
 \begin{bash}
 smbclient -N //10.129.71.114/Workshares
@@ -333,5 +332,44 @@ smb: \> ls
 smb: \> cd James.P
 smb: \> get flag.txt
 \end{bash}
+
+\section{Redeemer}
+
+Which TCP port is open on the machine? HTB hints that the TCP open port has 4 digits and the last one is 9. Generate a list \bashinline{ports9.txt} with these ports and
+\begin{bash}
+for port in $(cat ports9.txt) ; do
+  nmap -p $port 10.129.70.15 >> scan.txt
+done
+grep -i "open" scan.txt
+\end{bash}
+
+Which service is running on the port that is open on the machine? \bashinline{redis} is open on port 6379.
+
+What type of database is Redis? Choose from the following options: (i) In-memory Database, (ii) Traditional Database.
+Googling about Redis, we see that it is an ``in-memory Database''.
+
+Which command-line utility is used to interact with the Redis server? Enter the program name you would enter into the terminal without any arguments.
+\begin{bash}
+sudo pacman -S redis
+redis-cli -h 10.129.70.15
+\end{bash}
+
+Once connected to a Redis server, which command is used to obtain the information and statistics about the Redis server? From \url{https://redis.io/commands/}, \bashinline{info}.
+\begin{bash}
+10.129.70.15:6379> info
+10.129.70.15:6379> select 0
+10.129.70.15:6379> info
+# Keyspace
+db0:keys=4,expires=0,avg_ttl=0
+10.129.70.15:6379> keys *
+10.129.70.15:6379> get flag
+\end{bash}
+
+
+What is the version of the Redis server being used on the target machine? \bashinline{5.0.7}.
+
+Which command is used to select the desired database in Redis? \bashinline{select 0}.
+
+How many keys are present inside the database with index 0? 4
 
 \end{document}
