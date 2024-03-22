@@ -11,9 +11,10 @@
 %\usepackage{mathrsfs}
 
 %\usepackage{minted}
+\usepackage{fontawesome5}
 
 \usepackage{titling}
-\usepackage{indentfirst}
+%\usepackage{indentfirst}
 
 %\usepackage{bm}
 %\usepackage[dvipsnames]{xcolor}
@@ -23,9 +24,13 @@
 \usepackage{xurl}
 \usepackage[colorlinks=true]{hyperref}
 
+\usepackage{silence}    % getting rid of hyperref warnings
+\WarningsOff[hyperref]
+
 \usepackage{float}
 \usepackage{graphicx}
 %\usepackage{tikz}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -37,7 +42,6 @@
 \newcommand{\Q}{{\mathbb{Q}}}
 \newcommand{\R}{{\mathbb{R}}}
 \newcommand{\C}{{\mathbb{C}}}
-\renewcommand{\S}{{\hat{S}}}
 
 \newcommand{\cc}[1]{\overline{#1}}
 \newcommand{\unit}[1]{\; \mathrm{#1}}
