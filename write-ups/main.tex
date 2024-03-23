@@ -7,6 +7,7 @@
 \definecolor{bg}{rgb}{0.85,0.85,0.85}
 \setmintedinline{bgcolor=bg}
 \newcommand{\bashinline}[1]{\mintinline{bash}{#1}}
+\newcommand{\sqlinline}[1]{\mintinline{mysql}{#1}}
 %\newenvironment{bash}{\VerbatimEnvironment\begin{minted}[bgcolor=bg]{bash}}{\end{minted}}
 
 \usepackage{tcolorbox}
@@ -18,6 +19,16 @@
   listing only,
   minted style=vs,
   minted language=bash,
+  minted options={texcl=true},
+  left=1mm,
+}
+\newtcblisting{sql}{
+  listing engine=minted,
+  colback=bg,
+  colframe=black!70,
+  listing only,
+  minted style=vs,
+  minted language=mysql,
   minted options={texcl=true},
   left=1mm,
 }
@@ -33,15 +44,15 @@
 
 \section{Linux Fundamentals}
 
-Command \bashinline{uname -a} to discover which Linux distribution you are in.
+Command \mintinline{bash}{uname -a} to discover which Linux distribution you are in.
 
 \n
 
-The \bashinline{PS1} variable can be modified to display useful information, such as full hostname (IP addresses in some cases) and date.
+The \mintinline{bash}{PS1} variable can be modified to display useful information, such as full hostname (IP addresses in some cases) and date.
 
 \n
 
-To find help about Linux, have in mind \bashinline{man} and \bashinline{apropos}.
+To find help about Linux, have in mind \mintinline{bash}{man} and \mintinline{bash}{apropos}.
 
 \n
 
@@ -51,11 +62,11 @@ whoami, id, hostname, hostnamectl, uname, pwd, ifconfig, ip, netstat,
 ss, ps, who, env, lsblk, lsusb, lsof, lspci.
 \end{bash}
 
-The command \bashinline{uname -r} can be useful, because we can search for a kernel specific version exploit. Example: search for ``4.15.0-99-generic exploit'', and the first \href{https://www.exploit-db.com/exploits/47163}{result} immediately appears useful to us.
+The command \mintinline{bash}{uname -r} can be useful, because we can search for a kernel specific version exploit. Example: search for ``4.15.0-99-generic exploit'', and the first \href{https://www.exploit-db.com/exploits/47163}{result} immediately appears useful to us.
 
 \n
 
-Connect to VPN (\bashinline{sudo} is necessary):
+Connect to VPN (\mintinline{bash}{sudo} is necessary):
 \begin{bash}
 sudo openvpn academy-regular.ovpn
 \end{bash}
@@ -65,37 +76,37 @@ To connect via SSH:
 ssh [username]@[IP address]
 \end{bash}
 
-The command \bashinline{stat} displays metadata about files, for example its inode (index number), birth, last modification, etc.
+The command \mintinline{bash}{stat} displays metadata about files, for example its inode (index number), birth, last modification, etc.
 
 \n
 
-The \bashinline{tree} command is much more useful than listing one directory by one with \bashinline{ls}.
+The \mintinline{bash}{tree} command is much more useful than listing one directory by one with \mintinline{bash}{ls}.
 
 \n
 
-Commands for file searching: \bashinline{which, find, locate}.
+Commands for file searching: \mintinline{bash}{which, find, locate}.
 
 \n
 
-What is the name of the config file that has been created after \bashinline{2020-03-03} and is smaller than \bashinline{28k} but larger than \bashinline{25k}?
+What is the name of the config file that has been created after \mintinline{bash}{2020-03-03} and is smaller than \mintinline{bash}{28k} but larger than \mintinline{bash}{25k}?
 \begin{bash}
 find / -type f -name *.conf -size +25k -size -28k \
 -exec ls -la {} \; 2>/dev/null
 \end{bash}
 
-If we try to use the argument \bashinline{-newerBt 2020-03-03} we get
+If we try to use the argument \mintinline{bash}{-newerBt 2020-03-03} we get
 ``\texttt{find: This system does not provide a way to find the birth time of a file.}''
 
 \n
 
-How many files exist on the system that have the \bashinline{.bak} extension?
+How many files exist on the system that have the \mintinline{bash}{.bak} extension?
 \begin{bash}
 find / -type f -name *.bak 2>/dev/null | wc -l
 \end{bash}
 
 \n
 
-File descriptors are \bashinline{STDIN - 0}, \bashinline{STDOUT - 1}, \bashinline{STDERR - 2}. We can redirect erros and output with \bashinline{>}. The \bashinline{<} character serves as standard input. To append text to a file, we use \bashinline{>>}. The \bashinline{<< FINISH} serves to enter standard input through a stream until we type \bashinline{"FINISH"} to define the input's end. Usually we use \bashinline{EOF} instead of \bashinline{FINISH}, but it can be any word. The pipe \bashinline{|} is for redirecting standard output to standard input for the next command.
+File descriptors are \mintinline{bash}{STDIN - 0}, \mintinline{bash}{STDOUT - 1}, \mintinline{bash}{STDERR - 2}. We can redirect erros and output with \mintinline{bash}{>}. The \mintinline{bash}{<} character serves as standard input. To append text to a file, we use \mintinline{bash}{>>}. The \mintinline{bash}{<< FINISH} serves to enter standard input through a stream until we type \mintinline{bash}{"FINISH"} to define the input's end. Usually we use \mintinline{bash}{EOF} instead of \mintinline{bash}{FINISH}, but it can be any word. The pipe \mintinline{bash}{|} is for redirecting standard output to standard input for the next command.
 \begin{bash}
 find /etc -name shadow 2>/dev/null > results.txt
 find /etc -name shadow 2>stderr.txt 1>stdout.txt
@@ -106,48 +117,48 @@ find /etc/ -name *.conf 2>/dev/null | grep systemd | wc -l
 
 \n
 
-Pagers are \bashinline{more} and \bashinline{less}. Command \bashinline{head} for the first lines of input, \bashinline{tail} for the last lines, and \bashinline{sort} to sort the lines.
+Pagers are \mintinline{bash}{more} and \mintinline{bash}{less}. Command \mintinline{bash}{head} for the first lines of input, \mintinline{bash}{tail} for the last lines, and \mintinline{bash}{sort} to sort the lines.
 
 \n
 
-To filter lines we use \bashinline{grep}. The option \bashinline{-v} is to exclude the filtered results.
+To filter lines we use \mintinline{bash}{grep}. The option \mintinline{bash}{-v} is to exclude the filtered results.
 \begin{bash}
 cat /etc/passwd | grep -v "false\|nologin"
 \end{bash}
 
-The \bashinline{cut} command is to remove specific delimiters and show the words in a specified position. The option \bashinline{-d} is for the delimiter and \bashinline{-f} for the position.
+The \mintinline{bash}{cut} command is to remove specific delimiters and show the words in a specified position. The option \mintinline{bash}{-d} is for the delimiter and \mintinline{bash}{-f} for the position.
 \begin{bash}
 cat /etc/passwd | grep -v "false\|nologin" | cut -d":" -f1
 \end{bash}
 
-In the next example, we replace the colon character with space using \bashinline{tr}.
+In the next example, we replace the colon character with space using \mintinline{bash}{tr}.
 \begin{bash}
 cat /etc/passwd | grep -v "false\|nologin" | tr ":" " "
 \end{bash}
 
-The tool \bashinline{column} is to display in a tabular form.
+The tool \mintinline{bash}{column} is to display in a tabular form.
 \begin{bash}
 cat /etc/passwd | grep -v "false\|nologin" | tr ":" " " | column -t
 \end{bash}
 
-Of course, \bashinline{sed} and \bashinline{awk} need no introduction.
+Of course, \mintinline{bash}{sed} and \mintinline{bash}{awk} need no introduction.
 \begin{bash}
 cat /etc/passwd | grep -v "false\|nologin" | tr ":" " " |
 awk '{print $1, $NF}' | sed 's/bin/HTB/g'
 \end{bash}
 
-Counting lines with \bashinline{wc -l}.
+Counting lines with \mintinline{bash}{wc -l}.
 
 \n
 
 How many services are listening on the target system on all interfaces? (Not on localhost and IPv4 only)
 
-The file \bashinline{/etc/services} is a table for the internet services, port numbers and protocol types. ``Every networking program should look into this file to get the port number (and protocol) for its service''. But this file does not tell us about the active running services.
+The file \mintinline{bash}{/etc/services} is a table for the internet services, port numbers and protocol types. ``Every networking program should look into this file to get the port number (and protocol) for its service''. But this file does not tell us about the active running services.
 \begin{bash}
 ss -Hl -4 | grep "LISTEN" | grep -v "127\.0\.0" | wc -l
 \end{bash}
 
-The command \bashinline{ss} dumps socket (network services) statistics.
+The command \mintinline{bash}{ss} dumps socket (network services) statistics.
 
 \n
 
@@ -171,14 +182,14 @@ grep -o "https\?://www\.inlanefreight\.com[^\"']*" site.html |
 sort | uniq | wc -l
 \end{bash}
 
-Change permissions ``\texttt{rwx}'' with \bashinline{chmod} and ownership with \bashinline{chown}.
+Change permissions ``\texttt{rwx}'' with \mintinline{bash}{chmod} and ownership with \mintinline{bash}{chown}.
 
 \n
 
 Besides assigning direct user and group permissions, we can also configure special permissions for files by setting the Set User ID (SUID) and Set Group ID (SGID) bits. These SUID/SGID bits allow, for example, users to run programs with the rights of another user. Administrators often use this to give their users special rights for certain applications or files. The letter ``s'' is used instead of an ``x''. When executing such a program, the SUID/SGID of the file owner is used.
 
 \n
-If the administrator sets the SUID bit to \bashinline{journalctl}, any user with access to this application could execute a shell as root. This is because it invokes the pager \bashinline{less}, that can execute arbitrary code.
+If the administrator sets the SUID bit to \mintinline{bash}{journalctl}, any user with access to this application could execute a shell as root. This is because it invokes the pager \mintinline{bash}{less}, that can execute arbitrary code.
 
 It can be used to break out from restricted environments by spawning an interactive system shell.
 \begin{bash}
@@ -186,7 +197,7 @@ journalctl
 !/bin/sh
 \end{bash}
 
-If the \bashinline{journalctl} is allowed to run as superuser by \bashinline{sudo}, it does not drop the elevated privileges and may be used to access the file system, escalate or maintain privileged access.
+If the \mintinline{bash}{journalctl} is allowed to run as superuser by \mintinline{bash}{sudo}, it does not drop the elevated privileges and may be used to access the file system, escalate or maintain privileged access.
 \begin{bash}
 sudo journalctl
 !/bin/sh
@@ -200,38 +211,38 @@ sudo journalctl
 
 \section{Nmap}
 
-Option \bashinline{-A} enables OS and version detection, script scanning and traceroute (it stands for aggressive).
+Option \mintinline{bash}{-A} enables OS and version detection, script scanning and traceroute (it stands for aggressive).
 
 \n
 
-Option \bashinline{-T4} is for faster execution.
+Option \mintinline{bash}{-T4} is for faster execution.
 
 \n
 
-You can specify them with the \bashinline{-T} option and their number (0–5) or their name. The template names are paranoid (0),
+You can specify them with the \mintinline{bash}{-T} option and their number (0–5) or their name. The template names are paranoid (0),
 sneaky (1), polite (2), normal (3), aggressive (4), and insane (5). The first two are for IDS evasion. Polite mode slows down the scan to use less bandwidth and target machine resources. Normal mode is the default and
-so \bashinline{-T3} does nothing. Aggressive mode speeds scans up by making the assumption that you are on a reasonably fast and reliable network. Finally insane mode assumes that you are on an extraordinarily fast network or are
+so \mintinline{bash}{-T3} does nothing. Aggressive mode speeds scans up by making the assumption that you are on a reasonably fast and reliable network. Finally insane mode assumes that you are on an extraordinarily fast network or are
 willing to sacrifice some accuracy for speed.
 
 \n
 
-Option \bashinline{-p} is to specify port ranges.
+Option \mintinline{bash}{-p} is to specify port ranges, and \mintinline{bash}{-p-} to scan for all ports.
 
 \n
 
-Option \bashinline{-sV} is to determine service/version info on open ports.
+Option \mintinline{bash}{-sV} is to determine service/version info on open ports.
 
 \n
 
-Option \bashinline{-O} enables OS detection.
+Option \mintinline{bash}{-O} enables OS detection.
 
 \n
 
-Option \bashinline{-Pn} treats all hosts as online -- skip host discovery.
+The \mintinline{bash}{-P} options to nmap specify which "ping" methods it should use to see if a host is up. Option \mintinline{bash}{-Pn} treats all hosts as online -- does not ping, and skip host discovery.
 
 \n
 
-Look at \bashinline{-sS}. It says it performs a stealthy scan.
+Look at \mintinline{bash}{-sS}. It says it performs a stealthy scan.
 
 Example:
 \begin{bash}
@@ -266,9 +277,9 @@ What does the 3-letter acronym FTP stand for? File Transfer Protocol.
 
 Which port does the FTP service listen on usually? Port 21.
 
-What acronym is used for the secure version of FTP? \bashinline{sftp}.
+What acronym is used for the secure version of FTP? \mintinline{bash}{sftp}.
 
-From your scans, what version is FTP running on the target? \bashinline{vsftpd 3.0.3}.
+From your scans, what version is FTP running on the target? \mintinline{bash}{vsftpd 3.0.3}.
 
 From your scans, what OS type is running on the target? Unix.
 
@@ -281,9 +292,9 @@ PORT   STATE SERVICE VERSION
 |_-rw-r--r--    1 0        0              32 Jun 04  2021 flag.txt
 \end{bash}
 
-The output \bashinline{ftp-anon} is a \href{https://nmap.org/nsedoc/scripts/ftp-anon.html}{script} from \bashinline{nmap}. It checks if the FTP running service allows for anonymous login.
+The output \mintinline{bash}{ftp-anon} is a \href{https://nmap.org/nsedoc/scripts/ftp-anon.html}{script} from \mintinline{bash}{nmap}. It checks if the FTP running service allows for anonymous login.
 
-From GitHub \href{https://github.com/danielmiessler/SecLists/blob/master/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt}{Default-Credentials}, we see \bashinline{anonymous:anonymous}.
+From GitHub \href{https://github.com/danielmiessler/SecLists/blob/master/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt}{Default-Credentials}, we see \mintinline{bash}{anonymous:anonymous}.
 
 What is the response code we get for the FTP message ``Login successful''? 230.
 \begin{bash}
@@ -294,7 +305,7 @@ Password: anonymous
 230 Login successful.
 \end{bash}
 
-What is the command used to download the file we found on the FTP server? \bashinline{get}.
+What is the command used to download the file we found on the FTP server? \mintinline{bash}{get}.
 \begin{bash}
 ftp> ls
 ftp> get flag.txt
@@ -321,7 +332,7 @@ Host script results:
 |_    Message signing enabled but not required
 \end{bash}
 
-What is the service name for port 445 that came up in our scan? \bashinline{microsoft-ds}.
+What is the service name for port 445 that came up in our scan? \mintinline{bash}{microsoft-ds}.
 
 What is the 'flag' or 'switch' that we can use with the smbclient utility to 'list' the available shares on Dancing?
 \begin{bash}
@@ -347,7 +358,7 @@ smb: \> get flag.txt
 
 \subsection{Redeemer \faLinux}
 
-Which TCP port is open on the machine? HTB hints that the TCP open port has 4 digits and the last one is 9. Generate a list \bashinline{ports9.txt} with these ports and
+Which TCP port is open on the machine? HTB hints that the TCP open port has 4 digits and the last one is 9. Generate a list \mintinline{bash}{ports9.txt} with these ports and
 \begin{bash}
 for port in $(cat ports9.txt) ; do
   nmap -p $port 10.129.70.15 >> scan.txt
@@ -355,7 +366,7 @@ done
 grep -i "open" scan.txt
 \end{bash}
 
-Which service is running on the port that is open on the machine? \bashinline{redis} is open on port 6379.
+Which service is running on the port that is open on the machine? \mintinline{bash}{redis} is open on port 6379.
 
 What type of database is Redis? Choose from the following options: (i) In-memory Database, (ii) Traditional Database.
 Googling about Redis, we see that it is an ``in-memory Database''.
@@ -366,7 +377,7 @@ sudo pacman -S redis
 redis-cli -h 10.129.70.15
 \end{bash}
 
-Once connected to a Redis server, which command is used to obtain the information and statistics about the Redis server? From \url{https://redis.io/commands/}, \bashinline{info}.
+Once connected to a Redis server, which command is used to obtain the information and statistics about the Redis server? From \url{https://redis.io/commands/}, \mintinline{bash}{info}.
 \begin{bash}
 10.129.70.15:6379> info
 10.129.70.15:6379> select 0
@@ -378,11 +389,11 @@ db0:keys=4,expires=0,avg_ttl=0
 \end{bash}
 
 
-What is the version of the Redis server being used on the target machine? \bashinline{5.0.7}.
+What is the version of the Redis server being used on the target machine? \mintinline{bash}{5.0.7}.
 
-Which command is used to select the desired database in Redis? \bashinline{select 0}.
+Which command is used to select the desired database in Redis? \mintinline{bash}{select 0}.
 
-How many keys are present inside the database with index 0? 4
+How many keys are present inside the database with index 0? 4.
 
 \subsection{Explosion \faWindows}
 What does the 3-letter acronym RDP stand for? Remote Desktop Protocol.
@@ -395,7 +406,7 @@ What is the name of an old remote access tool that came without encryption by de
 
 What is the name of the service running on port 3389 TCP? ms-wbt-server.
 
-What is the switch used to specify the target host's IP when using xfreerdp? \bashinline{/v:}.
+What is the switch used to specify the target host's IP when using xfreerdp? \mintinline{bash}{/v:}.
 
 What username successfully returns a desktop projection to us with a blank password? Administrator.
 \begin{bash}
@@ -407,30 +418,125 @@ xfreerdp /v:10.129.150.101:3389 /u:Administrator
 
 Directory Brute-forcing is a technique used to check a lot of paths on a web server to find hidden pages. Which is another name for this? (i) Local File Inclusion, (ii) dir busting, (iii) hash cracking. (ii) dir busting.
 
-What switch do we use for nmap's scan to specify that we want to perform version detection? \bashinline{-sV}.
+What switch do we use for nmap's scan to specify that we want to perform version detection? \mintinline{bash}{-sV}.
 
-What does Nmap report is the service identified as running on port 80/tcp? \bashinline{http}.
+What does Nmap report is the service identified as running on port 80/tcp? \mintinline{bash}{http}.
 
-What server name and version of service is running on port 80/tcp? \bashinline{nginx 1.14.2}.
+What server name and version of service is running on port 80/tcp? \mintinline{bash}{nginx 1.14.2}.
 \begin{bash}
 nmap -sV -p 80 10.129.90.209
 \end{bash}
 
-What switch do we use to specify to Gobuster we want to perform dir busting specifically? \bashinline{dir}.
+What switch do we use to specify to Gobuster we want to perform dir busting specifically? \mintinline{bash}{dir}.
 
-When using gobuster to dir bust, what switch do we add to make sure it finds PHP pages? \bashinline{-x php}.
+When using gobuster to dir bust, what switch do we add to make sure it finds PHP pages? \mintinline{bash}{-x php}.
 \begin{bash}
 gobuster dir -x php -w wordlist.txt -u 10.129.90.209
 \end{bash}
 
 Kali Linux already comes with wordlists, but we can download on \href{https://github.com/daviddias/node-dirbuster/blob/master/lists/directory-list-2.3-medium.txt}{GitHub}.
 
-What page is found during our dir busting activities? \bashinline{admin.php}.
+What page is found during our dir busting activities? \mintinline{bash}{admin.php}.
 
-What is the HTTP status code reported by Gobuster for the discovered page? \bashinline{200}.
+What is the HTTP status code reported by Gobuster for the discovered page? \mintinline{bash}{200}.
 
-Go to \bashinline{http://10.129.90.209/admin.php}. Log in with \bashinline{admin:admin}.
+Go to \mintinline{bash}{http://10.129.90.209/admin.php}. Log in with \mintinline{bash}{admin:admin}.
 
 \subsection{Mongod \faLinux}
+
+How many TCP ports are open on the machine? 2 ports. Port 22 for \mintinline{bash}{ssh} and 27017 for \mintinline{bash}{mongodb}.
+
+Scan for every single port, because MongoDB uses ports with high numbers.
+\begin{bash}
+nmap -O -sV -p- -Pn 10.129.181.87
+\end{bash}
+
+Which service is running on port 27017 of the remote host? \mintinline{bash}{MongoDB 3.6.8}.
+
+What type of database is MongoDB? (Choose: SQL or NoSQL) NoSQL.
+
+What is the command name for the Mongo shell that is installed with the mongodb-clients package? \mintinline{bash}{mongo} or \mintinline{bash}{mongosh}.
+
+What is the command used for listing all the databases present on the MongoDB server? \mintinline{bash}{show dbs}. Take a look at \href{https://book.hacktricks.xyz/network-services-pentesting/27017-27018-mongodb}{Pentesting MongoDB}.
+
+What is the command used for listing out the collections in a database? \mintinline{bash}{show collections}.
+
+What is the command used for dumping the content of all the documents within the collection named flag in a format that is easy to read? \mintinline{bash}{db.flag.find().pretty()}.
+\begin{bash}
+sudo pacman -S mongodb-bin
+mongosh 10.129.181.87
+> show dbs
+> use sensitive_information
+> show collections
+> db.flag.find().pretty()
+\end{bash}
+
+\subsection{Synced \faLinux}
+
+What is the default port for rsync? 873.
+
+How many TCP ports are open on the remote host? 1.
+\begin{bash}
+nmap -sV -Pn -p- -T4 10.129.195.160
+\end{bash}
+
+What is the protocol version used by rsync on the remote machine? 31.
+
+What is the most common command name on Linux to interact with rsync? \mintinline{bash}{rsync}.
+
+What credentials do you have to pass to rsync in order to use anonymous authentication? \mintinline{bash}{None}.
+
+What is the option to only list shares and files on rsync? Do \mintinline{bash}{rsync -h | grep list}. The option is \mintinline{bash}{--list-only}.
+\begin{bash}
+sudo pacman -S tldr     # GREAT TOOL
+tldr rsync
+rsync rsync://10.129.195.160
+public      Anonymous Share
+rsync rsync://10.129.195.160/public
+rsync rsync://10.129.195.160/public/flag.txt ./
+\end{bash}
+
+\subsection{Appointment \faLinux}
+
+What does the acronym SQL stand for? Structured Query Language.
+
+What is one of the most common type of SQL vulnerabilities? SQL Injection.
+
+What is the 2021 OWASP Top 10 classification for this vulnerability? A03:2021-Injection.
+
+What does Nmap report as the service and version that are running on port 80 of the target? \mintinline{bash}{Apache httpd 2.4.38 ((Debian))}.
+\begin{bash}
+sudo nmap -sV -O -Pn -T4 -p 80 10.129.193.161
+\end{bash}
+
+What is the standard port used for the HTTPS protocol? 443.
+
+What is a folder called in web-application terminology? directory.
+
+What is the HTTP response code is given for `Not Found' errors? 404.
+
+Gobuster is one tool used to brute force directories on a webserver. What switch do we use with Gobuster to specify we're looking to discover directories, and not subdomains? \mintinline{bash}{dir}.
+
+What single character can be used to comment out the rest of a line in MySQL? \mintinline{mysql}{#}.
+
+If user input is not handled carefully, it could be interpreted as a comment. Use a comment to login as admin without knowing the password. What is the first word on the webpage returned? Congratulations.
+
+\n
+
+Go to \mintinline{bash}{http://10.129.193.161} and we see a login screen. Googling ``login as admin sql injection'', we \href{https://sechow.com/bricks/docs/login-1.html}{come up with} the idea of putting some arbitrary entry in the user field, and \mintinline{mysql}{passwd' or '1'='1} in the password field.
+
+The idea is that, when \mintinline{mysql}{user="user"} and \mintinline{mysql}{password="passwd"}, the server is executing a SQL query like:
+\begin{sql}
+SELECT * FROM users WHERE user='user' and password='passwd'
+\end{sql}
+If we put \mintinline{mysql}{user="user"} and \mintinline{mysql}{password="passwd' or '1'='1"}, the query becomes
+\begin{sql}
+SELECT * FROM users WHERE user='user' and password='passwd' or '1'='1'
+\end{sql}
+The \mintinline{mysql}{password='passwd' or '1'='1'} condition is always true, so the password verification never happens.
+
+\n
+
+Another way to do it is putting \mintinline{mysql}{user="' or 1#"} and \mintinline{mysql}{password="asd"}. The \mintinline{mysql}{#} character will comment out the rest of the line, and the constant \mintinline{mysql}{1} is always true.
 
 \end{document}
