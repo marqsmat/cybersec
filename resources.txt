@@ -21,3 +21,60 @@ Dicas vindas do Reddit:
     . https://www.coursera.org/professional-certificates/ibm-cybersecurity-analyst
     . If you're not in IT but you're considering a career in cybersecurity, whether it's because you're caught up in the buzz or genuinely interested, here's a tip: start your journey in roles like system administration, IT support, helpdesk, or anything else involving networks and servers. This is something really overlooked in the marketing/HR whatever cybersecurity hype business.  So, that's just my personal piece of advice. It's a fantastic field, and you're bound to learn heaps regardless of the path you choose. But don't get too dazzled by the glamour. Be patient, start from the basics, and work your way up. It's worth it, trust me.
     . https://www.reddit.com/r/cybersecurity/comments/137xf0d/comment/jiwkv8a/?xpromo_edp=enabled
+
+Cabeça:
+    Certificações
+    Security+
+    -https://www.comptia.jp/pdf/CompTIA%20Security+%20SY0-601%20Exam%20Objectives%20(3.0).pdf
+    -https://www.youtube.com/watch?v=KiEptGbnEBc&list=PLG49S3nxzAnl4QDVqK-hOnoqcSKEIDDuv
+    -https://www.youtube.com/watch?v=U7NrAcmkue8&list=PLsa3hBEdOOQVoVT6YC7LImvoi5Sq_AQtF
+    CEH
+    OSCP, OSCE e OSWE
+    Canais no Youtube
+    https://www.youtube.com/@LiveOverflow
+    https://www.youtube.com/@NahamSec
+    https://www.youtube.com/@BugBountyReportsExplained
+
+    Livros
+    The Web Application Hacker's Handbook - Marcus Pinto, Dafydd Stuttard
+    Bug bounty bootcamp - Vickie Li
+    Real-World Bug Hunting: A Field Guide to Web Hacking - Peter Yaworski
+    Testes de Invasão: Uma introdução prática ao hacking - Georgia Weidman
+    Black Hat Python - Justin Seitz
+
+    Plataformas para aprender
+    https://www.letsdefend.io/
+    https://tryhackme.com/
+    https://www.hackthebox.com/
+
+    Plataformas para ganhar dinheiro com freelas (Bug Bounties)
+    https://www.hackerone.com/
+    https://www.bugcrowd.com/
+
+    Requisitos comuns em vagas
+    OWASP TOP 10 (https://owasp.org/www-project-top-ten/)
+    OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/index.html)
+    OWASP Testing Guides (https://owasp.org/www-project-web-security-testing-guide/)
+    Saber programar (geralmente Python: https://www.fullstackpython.com/ , https://docs.python-guide.org/ )
+    Ferramentas de SAST, DAST e SCA
+
+    Dicas para arrumar trampo em sec
+    Fazer linkedin
+    Seguir algumas empresas e observar as vagas de sec
+    (Exemplos: bancos(itau, nubank, santander, c6, btg, xp, inter…),
+    tech(google, ibm, microsoft, meta, amazon, netflix, spotify…),
+    outros(mercado livre, magalu, ambev, ifood, serasa experian, cielo, pagbank, creditas, picpay, quinto andar, loft, idwall…)
+    Se candidatar para vagas de estágio, junior, e trainee)
+    Pegar “experiência” em fazer entrevistas, ver o que funciona e o que não funciona pra passar nas entrevistas.
+    Por exemplo, demonstrar que está disposto a aprender coisas novas e se adapta com facilidade geralmente é uma boa.
+    Perguntar sobre as características da vaga e da empresa também gostam.
+    Demonstrar que você pesquisou sobre a empresa, demonstrar que você é uma pessoa comunicativa, que vai se dar bem com as pessoas, que vai aprender, ensinar e compartilhar conhecimentos…
+    Só exemplos, mas tem muitas nuances que tu só pega fazendo muitas entrevistas e falhando em várias e passando em algumas.
+
+Carlos:
+    Redes de Computadores - Tanenbaum
+
+Reminder:
+    hackthissite
+    Criar projetinhos de cybersec no github. Por exemplo um scanner meu próprio
+    Bancos (itaú, santander) tem vagas para trainee por volta de agosto.
