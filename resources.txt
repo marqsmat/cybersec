@@ -78,3 +78,19 @@ Reminder:
     hackthissite
     Criar projetinhos de cybersec no github. Por exemplo um scanner meu próprio
     Bancos (itaú, santander) tem vagas para trainee por volta de agosto.
+
+Reddit:
+    Black Hills Info Sec
+    I would go THM premium for idk 2 or 3 months and do the paths, it's a great way to start.
+    Then check out INE free paths and maybe their certs if you dig this stuff. Then go to HTB for more challenging stuff.
+    I would avoid focusing on something like the Cisco courses since it's really basic and it mostly just covers concepts and theory,
+    not many practical stuff and they focus on Cisco stuff (which is not so relevant at first).
+
+    https://www.reddit.com/r/cybersecurity/comments/oraztt/cybersecurity_free_and_paid_online_courses_that/
+    https://www.reddit.com/r/cybersecurity/comments/rgv37y/best_cyber_security_courses_on_the_market/
+
+    CompTIA Security+ course by Jason Dion on Udemy. This is really good to get the basis knowledge and concepts of cybersecurity.
+
+    PEN-200 – Penetration Testing with Kali Linux by Offensive Security. This is probably the best course for pentesting and you’ll learn everything you need for the OSCP exam. OSCP is the most sought certification in the IT field so it’s worth it.
+
+    CompTIA Security+ course by Professor Messer on YouTube. Very good content and it’s 100% free.
