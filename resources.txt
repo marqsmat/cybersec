@@ -95,6 +95,10 @@ Reddit:
 
     CompTIA Security+ course by Professor Messer on YouTube. Very good content and it’s 100% free.
 
+    Comparing it to OSCP is tight, HTB is phenomenal material but hiring folk are usually laser focussed on those four letters more than anything. OSCP is still the gold standard ‘you have the job’ kinda deal but HTB’s absolutely a steping stone towards OSCP for sure. I saw this yesterday, here; hope it helps. https://twitter.com/elsawainblum/status/1560599069021523968
+    https://www.reddit.com/r/hackthebox/comments/wsw84y/htb_certified_penetration_testing_specialist/
+    From all my research, CEH is SHIT.
+
 Certificados de Graça:
     https://www.reddit.com/r/cybersecurity/comments/12670b4/for_anyone_looking_to_break_into_cybersecurity/
     https://www.netacad.com/courses/cybersecurity/cybersecurity-essentials
