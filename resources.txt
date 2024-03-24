@@ -94,3 +94,12 @@ Reddit:
     PEN-200 – Penetration Testing with Kali Linux by Offensive Security. This is probably the best course for pentesting and you’ll learn everything you need for the OSCP exam. OSCP is the most sought certification in the IT field so it’s worth it.
 
     CompTIA Security+ course by Professor Messer on YouTube. Very good content and it’s 100% free.
+
+Certificados de Graça:
+    https://www.reddit.com/r/cybersecurity/comments/12670b4/for_anyone_looking_to_break_into_cybersecurity/
+    https://www.netacad.com/courses/cybersecurity/cybersecurity-essentials
+    https://www.reddit.com/r/cybersecurity/comments/m5h24y/cisco_networking_academy/
+    https://www.netacad.com/courses/cybersecurity/introduction-cybersecurity
+    go for coursera cybersecurity courses, apply for financial aid, youll get them for free. From https://www.reddit.com/r/cybersecurity/comments/1ag4qke/free_cybersecurity_exam_certifications/
+    https://medium.com/@sam5epi0l/top-5-free-cyber-security-certifications-ac06fe46309c
+    My advice is to invest in LinkedIn. Watch a YouTube videos on how to professionalize your LinkedIn profile or even, on LinkedIn https://www.linkedin.com/learning/rock-your-linkedin-profile?trk=share_android_course_learning&shareId=cns4fuA9SzCUimjkms1Thw%3D%3D . Then subscribe to LinkedIn premium. The reason I like LinkedIn learning is, whenever you complete a course you can post the certificate of completion on your profile. Recruiters and interviewers will always checkout your LinkedIn profile. There they will see that you are improving in your knowledge. Link up with people in the same profession as you also and let them know you are in the job market. These days i only use LinkedIn Jobs to apply for positions because it helps me keep track of where i have applied. I had applied for one position on two different platforms and i was disqualified. So that's my two cents to your question. Good luck as you look. Don't forget 20+ application a day is not much.
