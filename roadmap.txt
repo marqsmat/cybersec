@@ -1,0 +1,20 @@
+* Gather some certificates at Coursera just to start. Do them after already knowing everything.
+For this, need to create fake account at Coursera and download courses with https://github.com/raffaem/cs-dlp.
+I will choose 3 courses from the list below:
+    # cybersec
+ *  https://www.coursera.org/professional-certificates/google-cybersecurity
+    maybe https://www.coursera.org/professional-certificates/ibm-cybersecurity-analyst, but Google's is preferred
+    # programming
+ *  https://www.coursera.org/specializations/pythonforcybersecurity
+    https://www.coursera.org/learn/algorithms-part1 This one is free, in Java
+    https://www.coursera.org/learn/algorithms-part2 FREE, Java
+    https://www.coursera.org/learn/analysis-of-algorithms FREE, Java
+    # web dev
+ *  https://www.coursera.org/professional-certificates/meta-front-end-developer, acho que vale a pena. aprender como fazer sites, e aprender html, js, css para exploitar.
+    https://www.coursera.org/professional-certificates/meta-back-end-developer, muito focado em django. por isso talvez não vale a pena
+
+Evolve on HTB Academy and THM. Maybe subscribe to them later to gather certifications.
+
+Develop projects on GitHub.
+
+Study for Sec+ and OSCP.
