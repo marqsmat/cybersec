@@ -760,4 +760,47 @@ evil-winrm --ip 10.129.97.105 --user Administrator --password badminton -P 5985
 *Evil-WinRM* PS C:\Users\Administrator\Documents> exit
 \end{bash}
 
+\subsection{Three \faLinux}
+
+\begin{bash}
+nmap -T5 -Pn -sV -p- --min-rate=1000 "10.129.193.208"
+\end{bash}
+\begin{txt}
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.7 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+\end{txt}
+How many TCP ports are open? \mintinline{bash}{2}.
+
+What is the domain of the email address in the ``Contact" section of the website? \mintinline{bash}{thetoppers.htb}.
+
+In the absence of a DNS server, which Linux file can we use to resolve hostnames to IP addresses in order to be able to access the websites that point to those hostnames? \mintinline{bash}{/etc/hosts}.
+\begin{bash}
+echo "10.129.193.208    thetoppers.htb" | sudo tee -a /etc/hosts
+\end{bash}
+
+\begin{bash}
+gobuster vhost -w subdomains-top1million-5000.txt -u thetoppers.htb --append-domain
+\end{bash}
+The option \mintinline{bash}{--append-domain} is important. Otherwise, the wordlist file must contain the full domains.
+Which sub-domain is discovered during further enumeration? \mintinline{bash}{s3.thetoppers.htb}.
+
+Which service is running on the discovered sub-domain? amazon s3.
+\begin{bash}
+echo "10.129.193.208    s3.thetoppers.htb" | sudo tee -a /etc/hosts
+\end{bash}
+
+Which command line utility can be used to interact with the service running on the discovered sub-domain? \mintinline{bash}{awscli}.
+
+Which command is used to set up the AWS CLI installation? \mintinline{bash}{aws configure}.
+
+What is the command used by the above utility to list all of the S3 buckets? \mintinline{bash}{aws s3 ls}.
+
+This server is configured to run files written in what web scripting language? \mintinline{bash}{php}.
+
+\n
+
+\textbf{I STILL HAVE TO THINK AND SUBMIT ROOT FLAG}
+
 \end{document}
