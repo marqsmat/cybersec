@@ -4,6 +4,7 @@ f=main
 #	pdflatex $(f).tex pdflatex $(f).tex && latexmk $(f).tex && pdflatex $(f).tex pdflatex $(f).tex
 
 clean:
+	rm -rf *.html
 	rm -rf *.pdf
 	rm -rf *.aux
 	rm -rf *.bbl
@@ -14,3 +15,4 @@ clean:
 	rm -rf *.out
 	rm -rf *.toc
 	rm -rf *.fdb_latexmk
+	rm -rf *.listing
