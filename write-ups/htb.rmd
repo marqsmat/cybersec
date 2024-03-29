@@ -177,9 +177,102 @@ sudo journalctl
 
 "Sticky bits" add another level of security for files and directories. Read about it later.
 
+Create a timer with `systemd`.
+```{bash eval=F}
+sudo mkdir /etc/systemd/system/mytimer.timer.d
+sudo vim /etc/systemd/system/mytimer.timer
+```
+```{txt eval=F}
+[Unit]
+Description=My Timer
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=1hour
+
+[Install]
+WantedBy=timers.target
+```
+
+Now create a service.
+```{bash eval=F}
+sudo vim /etc/systemd/system/mytimer.service
+```
+```{txt eval=F}
+[Unit]
+Description=My Service
+
+[Service]
+ExecStart=/full/path/to/my/script.sh
+
+[Install]
+WantedBy=multi-user.target
+```
+```{bash eval=F}
+sudo systemctl daemon-reload
+sudo systemctl start mytimer.service
+sudo systemctl enable mytimer.service
+```
+
+Crontab example:
+```{bash eval=F}
+crontab -l
+```
+```{bash eval=F}
+# System Update (every six hours)
+* */6 * * /path/to/update_software.sh
+
+# Execute scripts (every first day of the month at midnight)
+0 0 1 * * /path/to/scripts/run_scripts.sh
+
+# Cleanup DB (every Sunday at midnight)
+0 0 * * 0 /path/to/scripts/clean_database.sh
+
+# Backups (every Sunday at midnight)
+0 0 * * 7 /path/to/scripts/backup.sh
+```
+
+### Network protocols
 
 
-\pagebreak
+
+* OpenSSH: Administrators use OpenSSH to securely manage remote systems by establishing an encrypted connection to a remote host. With OpenSSH, administrators can execute commands on remote systems, securely transfer files, and establish a secure remote connection without the transmission of data and commands being intercepted by third parties.
+
+
+* NFS: Network File System (NFS) is a network protocol that allows us to store and manage files on remote systems as if they were stored on the local system. It enables easy and efficient management of files across networks. For example, administrators use NFS to store and manage files centrally (for Linux and Windows systems) to enable easy collaboration and management of data. For Linux, there are several NFS servers, including NFS-UTILS (Ubuntu), NFS-Ganesha (Solaris), and OpenNFS (Redhat Linux). It can also be used to share and manage resources efficiently, e.g., to replicate file systems between servers. It also offers features such as access controls, real-time file transfer, and support for multiple users accessing data simultaneously. We can use this service just like FTP in case there is no FTP client installed on the target system, or NFS is running instead of FTP. *In few words, NFS is similar to an USB but mounted across the network*.
+
+* HTTP: As penetration testers, we need to understand how web servers work because they are a critical part of web applications and often serve as targets for us to attack. A web server is a type of software that provides data and documents or other applications and functions over the Internet. They use the Hypertext Transfer Protocol (HTTP) to send data to clients such as web browsers and receive requests from those clients. These are then rendered in the form of Hypertext Markup Language (HTML) in the client's browser. This type of communication allows the client to create dynamic web pages that respond to the client's requests. Therefore, it is important that we understand the various functions of the web server in order to create secure and efficient web applications and also ensure the security of the system. Some of the most popular web servers for Linux servers are Apache, Nginx, Lighttpd, and Caddy.
+
+For Apache2, to specify which folders can be accessed, we can edit the file /etc/apache2/apache2.conf with a text editor. This file contains the global settings. We can change the settings to specify which directories can be accessed and what actions can be performed on those directories.
+
+```{txt eval=F}
+<Directory /var/www/html>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+</directory>
+```
+
+It is also possible to customize individual settings at the directory level by using the `.htaccess file`, which we can create in the directory in question. This file allows us to configure certain directory-level settings, such as access controls, without having to customize the Apache configuration file. We can also add modules to get features like `mod_rewrite`, `mod_security`, and `mod_ssl` that help us improve the security of our web application.
+
+Python Web Server is a simple, fast alternative to Apache and can be used to host a single folder with a single command to transfer files to another system.
+```{bash eval=F}
+python3 -m http.server
+```
+
+* Virtual Private Network (VPN) is a technology that allows us to connect securely to another network as if we were directly in it. This is done by creating an encrypted tunnel connection between the client and the server, which means that all data transmitted over this connection is encrypted.
+
+To create a `apache` simple server:
+```{bash eval=F}
+sudo pacman -S apache
+systemctl start http
+```
+The directory served to the web server is by default `/srv/http`. It can be accessed at `http://localhost`.
+
+cURL is a tool that allows us to transfer files from the shell over protocols like HTTP, HTTPS, FTP, SFTP, FTPS, or SCP. This tool gives us the possibility to control and test websites remotely. Besides the remote servers' content, we can also view individual requests to look at the client's and server's communication. Usually, cURL is already installed on most Linux systems. This is another critical reason to familiarize ourselves with this tool, as it can make some processes much easier later on.
+
+An alternative to curl is the tool wget. With this tool, we can download files from FTP or HTTP servers directly from the terminal, and it serves as a good download manager. If we use wget in the same way, the difference to curl is that the website content is downloaded and stored locally, as shown in the following example.
+
 
 ## Nmap
 
@@ -225,8 +318,6 @@ Very fast scan:
 ```{bash eval=F}
 nmap -T5 -A -p- --min-rate=500 10.129.44.239
 ```
-
-\pagebreak
 
 ## 2. HackTheBox Machines
 
