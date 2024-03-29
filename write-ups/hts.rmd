@@ -111,6 +111,12 @@ The answer is somewhere! Just look a little harder.
 ```
 This is a charade. The password is `somewhere`. Go to `index.php` and submit it. The level is completed.
 
+## Extended Basics
+
+### Level 1
+
+To crash the C program just enter a long enough string (200 or more characters), because an overflow will occur.
+
 ## Javascript
 
 ### Level 1
