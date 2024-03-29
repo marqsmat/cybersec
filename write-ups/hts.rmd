@@ -110,3 +110,9 @@ The file `DaAnswer` seems suspicious, so we go to `https://www.hackthissite.org/
 The answer is somewhere! Just look a little harder.
 ```
 This is a charade. The password is `somewhere`. Go to `index.php` and submit it. The level is completed.
+
+## Javascript
+
+### Level 1
+
+This is an idiot's test. Just view page source and check `javascript` code. We easily see that the password is `cookies`.
