@@ -54,3 +54,5 @@ grep -i "open" scan.txt
 * Where to get better password and directory lists? Search what Kali uses.
 
 * What is the difference between `gobuster` options `vhost` and `dns`?
+
+* What is `netcat` and how does it work?
