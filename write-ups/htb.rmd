@@ -15,6 +15,8 @@ library(fontawesome)
 
 ## Linux Fundamentals
 
+### Basics
+
 Command `uname -a` to discover which Linux distribution you are in.
 
 
@@ -177,6 +179,8 @@ sudo journalctl
 
 "Sticky bits" add another level of security for files and directories. Read about it later.
 
+### Scheduling tasks
+
 Create a timer with `systemd`.
 ```{bash eval=F}
 sudo mkdir /etc/systemd/system/mytimer.timer.d
@@ -234,8 +238,6 @@ crontab -l
 
 ### Network protocols
 
-
-
 * OpenSSH: Administrators use OpenSSH to securely manage remote systems by establishing an encrypted connection to a remote host. With OpenSSH, administrators can execute commands on remote systems, securely transfer files, and establish a secure remote connection without the transmission of data and commands being intercepted by third parties.
 
 
@@ -271,8 +273,110 @@ The directory served to the web server is by default `/srv/http`. It can be acce
 
 cURL is a tool that allows us to transfer files from the shell over protocols like HTTP, HTTPS, FTP, SFTP, FTPS, or SCP. This tool gives us the possibility to control and test websites remotely. Besides the remote servers' content, we can also view individual requests to look at the client's and server's communication. Usually, cURL is already installed on most Linux systems. This is another critical reason to familiarize ourselves with this tool, as it can make some processes much easier later on.
 
-An alternative to curl is the tool wget. With this tool, we can download files from FTP or HTTP servers directly from the terminal, and it serves as a good download manager. If we use wget in the same way, the difference to curl is that the website content is downloaded and stored locally, as shown in the following example.
+An alternative to curl is the tool wget. With this tool, we can download files from FTP or HTTP servers directly from the terminal, and it serves as a good download manager. If we use `wget` in the same way, the difference to `curl` is that the website content is downloaded and stored locally, as shown in the following example.
 
+
+### Backup and Restore
+
+Rsync - Backup a local directory to a backup-server:
+```{bash eval=F}
+rsync -av /path/to/mydirectory user@backup_server:/path/to/backup/directory
+```
+
+Rsync - Restore backup:
+```{bash eval=F}
+rsync -av user@remote_host:/path/to/backup/directory /path/to/mydirectory
+```
+
+Secure transfer of backup:
+```{bash eval=F}
+rsync -avz -e ssh /path/to/mydirectory user@backup_server:/path/to/backup/directory
+```
+
+### File management
+
+We can use the lsof command to list the open files on the file system.
+```{bash eval=F}
+lsof | grep "user"
+```
+
+If we find any processes that are using the file system, we need to stop them before we can unmount the file system. Additionally, we can also unmount a file system automatically when the system is shut down by adding an entry to the `/etc/fstab` file. The `/etc/fstab` file contains information about all the file systems that are mounted on the system, including the options for automatic mounting at boot time and other mount options. To unmount a file system automatically at shutdown, we need to add the `noauto` option to the entry in the `/etc/fstab` file for that file system.
+
+### Containerization
+
+Creating a Docker image is done by creating a Dockerfile, which contains all the instructions the Docker engine needs to create the container. We can use Docker containers as our “file hosting” server when transferring specific files to our target systems. Therefore, we must create a Dockerfile based on Ubuntu 22.04 with Apache and SSH server running. With this, we can use `scp` to transfer files to the docker image, and Apache allows us to host files and use tools like `curl`, `wget`, and others on the target system to download the required files. Such a Dockerfile could look like the following:
+```{bash eval=F}
+# Use the latest Ubuntu 22.04 LTS as the base image
+FROM ubuntu:22.04
+
+# Update the package repository and install the required packages
+RUN apt-get update && \
+    apt-get install -y \
+        apache2 \
+        openssh-server \
+        && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create a new user called "student"
+RUN useradd -m docker-user && \
+    echo "docker-user:password" | chpasswd
+
+# Give the htb-student user full access to the Apache and SSH services
+RUN chown -R docker-user:docker-user /var/www/html && \
+    chown -R docker-user:docker-user /var/run/apache2 && \
+    chown -R docker-user:docker-user /var/log/apache2 && \
+    chown -R docker-user:docker-user /var/lock/apache2 && \
+    usermod -aG sudo docker-user && \
+    echo "docker-user ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# Expose the required ports
+EXPOSE 22 80
+
+# Start the SSH and Apache services
+CMD service ssh start && /usr/sbin/apache2ctl -D FOREGROUND
+```
+
+Docker Build:
+```{bash eval=F}
+docker build -t FS_docker .
+```
+
+Docker Run:
+```{bash eval=F}
+# docker run -p <host port>:<docker port> -d <docker container name>
+docker run -p 8022:22 -p 8080:80 -d FS_docker
+```
+In this case, we start a new container from the image FS_docker and map the host ports 8022 and 8080 to container ports 22 and 80, respectively. The container runs in the background, allowing us to access the SSH and HTTP services inside the container using the specified host ports.
+
+When working with Docker images, it's important to note that any changes made to an existing image are not permanent. Instead, we need to create a new image that inherits from the original and includes the desired changes. This is done by creating a new Dockerfile that starts with the FROM statement, which specifies the base image, and then adds the necessary commands to make the desired changes. Once the Dockerfile is created, we can use the docker build command to build the new image, tagging it with a unique name to help identify it.
+
+It is important to note that Docker containers are designed to be immutable, meaning that any changes made to a container during runtime are lost when the container is stopped. Therefore, it is recommended to use container orchestration tools such as Docker Compose or Kubernetes to manage and scale containers in a production environment.
+
+Another framework to create containers is LXC (Linux Containers). It is different from Docker, and does not seem to be very used.
+
+Containers are useful, especially because they allow us to quickly spin up an isolated environment specific to our testing needs. For example, we might need to test a web application requiring a specific database or web server version. Rather than setting up these components on our machine, which can be time-consuming and error-prone, we can create a container that contains the exact configuration we need.
+
+We can also use them to test exploits or malware in a controlled environment where we create a container that simulates a vulnerable system or network and then use that container to safely test exploits without risking damaging our machines or networks. However, it is important to configure LXC container security to prevent unauthorized access or malicious activities inside the container. This can be achieved by implementing several security measures, such as:
+
+* Restricting access to the container
+
+* Limiting resources
+
+* Isolating the container from the host
+
+* Enforcing mandatory access control
+
+* Keeping the container up to date
+
+Let us limit the resources to the container. In order to configure `cgroups` for LXC and limit the CPU and memory, a container can create a new configuration file with the name of our container:
+```{bash eval=F}
+sudo vim /usr/share/lxc/config/linuxcontainer.conf
+```
+```{bash eval=F}
+lxc.cgroup.cpu.shares = 512     # 512/1024 = half of host's CPU time
+lxc.cgroup.memory.limit_in_bytes = 512M     # 512Mb of RAM available to the container
+```
+<++>
 
 ## Nmap
 
