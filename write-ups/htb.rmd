@@ -376,7 +376,33 @@ sudo vim /usr/share/lxc/config/linuxcontainer.conf
 lxc.cgroup.cpu.shares = 512     # 512/1024 = half of host's CPU time
 lxc.cgroup.memory.limit_in_bytes = 512M     # 512Mb of RAM available to the container
 ```
-<++>
+
+### Network Configuration
+
+Activate Network Interface
+```{bash eval=F}
+sudo ifconfig eth0 up     # OR
+sudo ip link set eth0 up
+```
+
+Assign IP Address to an Interface
+```{bash eval=F}
+sudo ifconfig eth0 192.168.1.2
+```
+
+Assign a Netmask to an Interface
+```{bash eval=F}
+sudo ifconfig eth0 netmask 255.255.255.0
+```
+
+Assign the Route to an Interface
+```{bash eval=F}
+sudo route add default gw 192.168.1.1 eth0
+```
+
+When configuring a network interface, it is often necessary to set Domain Name System (DNS) servers to ensure proper network functionality. DNS servers translate domain names into IP addresses, allowing devices to connect with each other on the internet. By setting those, we can ensure that their devices can communicate with other devices and access websites and other online resources. Without proper DNS server configuration, devices may experience network connectivity issues and be unable to access certain online resources. This can be achieved by updating the /etc/resolv.conf file with the appropriate DNS server information. The /etc/resolv.conf file is a plain text file containing the system's DNS information. The system can properly resolve domain names to IP addresses by adding the required DNS servers to this file. It is important to note that any changes made to this file will only apply to the current session and must be updated if the system is restarted or the network configuration is changed.
+
+Hardening mechanisms: SELinux, AppArmor and TCP wrappers.
 
 ## Nmap
 
