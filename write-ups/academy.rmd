@@ -1,0 +1,511 @@
+---
+title: HackTheBox Academy
+author: Mateus Marques
+output:
+ html_document:
+  highlight: tango
+urlcolor: magenta
+---
+
+## 1. Linux Fundamentals
+
+### Basics
+
+Command `uname -a` to discover which Linux distribution you are in.
+
+
+
+The `PS1` variable can be modified to display useful information, such as full hostname (IP addresses in some cases) and date.
+
+
+
+To find help about Linux, have in mind `man` and `apropos`.
+
+
+
+Commands that display system information:
+```
+whoami, id, hostname, hostnamectl, uname, pwd, ifconfig, ip, netstat,
+ss, ps, who, env, lsblk, lsusb, lsof, lspci.
+```
+
+The command `uname -r` can be useful, because we can search for a kernel specific version exploit. Example: search for "4.15.0-99-generic exploit", and the first [result](https://www.exploit-db.com/exploits/47163) immediately appears useful to us.
+
+
+
+Connect to VPN (`sudo` is necessary):
+```{bash eval=F}
+sudo openvpn academy-regular.ovpn
+```
+
+To connect via SSH:
+```{bash eval=F}
+ssh <user>@<IP address>
+```
+
+The command `stat` displays metadata about files, for example its inode (index number), birth, last modification, etc.
+
+
+
+The `tree` command is much more useful than listing one directory by one with `ls`.
+
+
+
+Commands for file searching: `which, find, locate`.
+
+
+
+What is the name of the config file that has been created after `2020-03-03` and is smaller than `28k` but larger than `25k`?
+```{bash eval=F}
+find / -type f -name *.conf -size +25k -size -28k -exec ls -la {} \; 2>/dev/null
+```
+
+If we try to use the argument `-newerBt 2020-03-03` we get
+"\texttt{find: This system does not provide a way to find the birth time of a file.}"
+
+
+
+How many files exist on the system that have the `.bak` extension?
+```{bash eval=F}
+find / -type f -name *.bak 2>/dev/null | wc -l
+```
+
+
+
+File descriptors are `STDIN - 0`, `STDOUT - 1`, `STDERR - 2`. We can redirect erros and output with `>`. The `<` character serves as standard input. To append text to a file, we use `>>`. The `<< FINISH` serves to enter standard input through a stream until we type `"FINISH"` to define the input's end. Usually we use `EOF` instead of `FINISH`, but it can be any word. The pipe `|` is for redirecting standard output to standard input for the next command.
+```{bash eval=F}
+find /etc -name shadow 2>/dev/null > results.txt
+find /etc -name shadow 2>stderr.txt 1>stdout.txt
+cat < input.txt
+cat << EOF > stream.txt
+write something
+...
+EOF
+```
+```{bash eval=F}
+find /etc -name *.conf 2>/dev/null | grep systemd | wc -l
+```
+
+
+
+Pagers are `more` and `less`. Command `head` for the first lines of input, `tail` for the last lines, and `sort` to sort the lines.
+
+
+
+To filter lines we use `grep`. The option `-v` is to exclude the filtered results.
+```{bash eval=F}
+cat /etc/passwd | grep -v "false\|nologin"
+```
+
+The `cut` command is to remove specific delimiters and show the words in a specified position. The option `-d` is for the delimiter and `-f` for the position.
+```{bash eval=F}
+cat /etc/passwd | grep -v "false\|nologin" | cut -d":" -f1
+```
+
+In the next example, we replace the colon character with space using `tr`.
+```{bash eval=F}
+cat /etc/passwd | grep -v "false\|nologin" | tr ":" " "
+```
+
+The tool `column` is to display in a tabular form.
+```{bash eval=F}
+cat /etc/passwd | grep -v "false\|nologin" | tr ":" " " | column -t
+```
+
+Of course, `sed` and `awk` need no introduction.
+```{bash eval=F}
+cat /etc/passwd | grep -v "false\|nologin" | tr ":" " " |
+awk '{print $1, $NF}' | sed 's/bin/HTB/g'
+```
+
+Counting lines with `wc -l`.
+
+
+
+How many services are listening on the target system on all interfaces? (Not on localhost and IPv4 only)
+
+The file `/etc/services` is a table for the internet services, port numbers and protocol types. "Every networking program should look into this file to get the port number (and protocol) for its service". But this file does not tell us about the active running services.
+```{bash eval=F}
+ss -Hl -4 | grep "LISTEN" | grep -v "127\.0\.0" | wc -l
+```
+
+The command `ss` dumps socket (network services) statistics.
+
+
+
+Determine what user the ProFTPd server is running under. Submit the username as the answer.
+```{bash eval=F}
+ps aux | grep -i "proftpd"
+```
+
+
+
+Use cURL from your Pwnbox (not the target machine) to obtain the source code of the [https://www.inlanefreight.com](https://www.inlanefreight.com) website and filter all unique paths of that domain. Submit the number of these paths as the answer.
+```{bash eval=F}
+curl -L "https://www.inlanefreight.com" > site.html
+grep -o "https\?://www\.inlanefreight\.com[^\"']*" site.html |
+sort | uniq | wc -l
+```
+
+```{bash eval=F}
+curl -L "https://www.inlanefreight.com" > site.html
+grep -o "https\?://www\.inlanefreight\.com[^\"']*" site.html |
+sort | uniq | wc -l
+```
+
+Change permissions "\texttt{rwx}" with `chmod` and ownership with `chown`.
+
+
+
+Besides assigning direct user and group permissions, we can also configure special permissions for files by setting the Set User ID (SUID) and Set Group ID (SGID) bits. These SUID/SGID bits allow, for example, users to run programs with the rights of another user. Administrators often use this to give their users special rights for certain applications or files. The letter "s" is used instead of an "x". When executing such a program, the SUID/SGID of the file owner is used.
+
+
+If the administrator sets the SUID bit to `journalctl`, any user with access to this application could execute a shell as root. This is because it invokes the pager `less`, that can execute arbitrary code.
+
+It can be used to break out from restricted environments by spawning an interactive system shell.
+```{bash eval=F}
+journalctl
+!/bin/sh
+```
+
+If the `journalctl` is allowed to run as superuser by `sudo`, it does not drop the elevated privileges and may be used to access the file system, escalate or maintain privileged access.
+```{bash eval=F}
+sudo journalctl
+!/bin/sh
+```
+
+"Sticky bits" add another level of security for files and directories. Read about it later.
+
+### Scheduling tasks
+
+Create a timer with `systemd`.
+```{bash eval=F}
+sudo mkdir /etc/systemd/system/mytimer.timer.d
+sudo vim /etc/systemd/system/mytimer.timer
+```
+```{txt eval=F}
+[Unit]
+Description=My Timer
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=1hour
+
+[Install]
+WantedBy=timers.target
+```
+
+Now create a service.
+```{bash eval=F}
+sudo vim /etc/systemd/system/mytimer.service
+```
+```{txt eval=F}
+[Unit]
+Description=My Service
+
+[Service]
+ExecStart=/full/path/to/my/script.sh
+
+[Install]
+WantedBy=multi-user.target
+```
+```{bash eval=F}
+sudo systemctl daemon-reload
+sudo systemctl start mytimer.service
+sudo systemctl enable mytimer.service
+```
+
+Crontab example:
+```{bash eval=F}
+crontab -l
+```
+```{bash eval=F}
+# System Update (every six hours)
+* */6 * * /path/to/update_software.sh
+
+# Execute scripts (every first day of the month at midnight)
+0 0 1 * * /path/to/scripts/run_scripts.sh
+
+# Cleanup DB (every Sunday at midnight)
+0 0 * * 0 /path/to/scripts/clean_database.sh
+
+# Backups (every Sunday at midnight)
+0 0 * * 7 /path/to/scripts/backup.sh
+```
+
+### Network protocols
+
+* OpenSSH: Administrators use OpenSSH to securely manage remote systems by establishing an encrypted connection to a remote host. With OpenSSH, administrators can execute commands on remote systems, securely transfer files, and establish a secure remote connection without the transmission of data and commands being intercepted by third parties.
+
+
+* NFS: Network File System (NFS) is a network protocol that allows us to store and manage files on remote systems as if they were stored on the local system. It enables easy and efficient management of files across networks. For example, administrators use NFS to store and manage files centrally (for Linux and Windows systems) to enable easy collaboration and management of data. For Linux, there are several NFS servers, including NFS-UTILS (Ubuntu), NFS-Ganesha (Solaris), and OpenNFS (Redhat Linux). It can also be used to share and manage resources efficiently, e.g., to replicate file systems between servers. It also offers features such as access controls, real-time file transfer, and support for multiple users accessing data simultaneously. We can use this service just like FTP in case there is no FTP client installed on the target system, or NFS is running instead of FTP. *In few words, NFS is similar to an USB but mounted across the network*.
+
+* HTTP: As penetration testers, we need to understand how web servers work because they are a critical part of web applications and often serve as targets for us to attack. A web server is a type of software that provides data and documents or other applications and functions over the Internet. They use the Hypertext Transfer Protocol (HTTP) to send data to clients such as web browsers and receive requests from those clients. These are then rendered in the form of Hypertext Markup Language (HTML) in the client's browser. This type of communication allows the client to create dynamic web pages that respond to the client's requests. Therefore, it is important that we understand the various functions of the web server in order to create secure and efficient web applications and also ensure the security of the system. Some of the most popular web servers for Linux servers are Apache, Nginx, Lighttpd, and Caddy.
+
+For Apache2, to specify which folders can be accessed, we can edit the file /etc/apache2/apache2.conf with a text editor. This file contains the global settings. We can change the settings to specify which directories can be accessed and what actions can be performed on those directories.
+
+```{txt eval=F}
+<Directory /var/www/html>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+</directory>
+```
+
+It is also possible to customize individual settings at the directory level by using the `.htaccess file`, which we can create in the directory in question. This file allows us to configure certain directory-level settings, such as access controls, without having to customize the Apache configuration file. We can also add modules to get features like `mod_rewrite`, `mod_security`, and `mod_ssl` that help us improve the security of our web application.
+
+Python Web Server is a simple, fast alternative to Apache and can be used to host a single folder with a single command to transfer files to another system.
+```{bash eval=F}
+python3 -m http.server
+```
+
+* Virtual Private Network (VPN) is a technology that allows us to connect securely to another network as if we were directly in it. This is done by creating an encrypted tunnel connection between the client and the server, which means that all data transmitted over this connection is encrypted.
+
+To create a `apache` simple server:
+```{bash eval=F}
+sudo pacman -S apache
+systemctl start http
+```
+The directory served to the web server is by default `/srv/http`. It can be accessed at `http://localhost`.
+
+cURL is a tool that allows us to transfer files from the shell over protocols like HTTP, HTTPS, FTP, SFTP, FTPS, or SCP. This tool gives us the possibility to control and test websites remotely. Besides the remote servers' content, we can also view individual requests to look at the client's and server's communication. Usually, cURL is already installed on most Linux systems. This is another critical reason to familiarize ourselves with this tool, as it can make some processes much easier later on.
+
+An alternative to curl is the tool wget. With this tool, we can download files from FTP or HTTP servers directly from the terminal, and it serves as a good download manager. If we use `wget` in the same way, the difference to `curl` is that the website content is downloaded and stored locally, as shown in the following example.
+
+
+### Backup and Restore
+
+Rsync - Backup a local directory to a backup-server:
+```{bash eval=F}
+rsync -av /path/to/mydirectory user@backup_server:/path/to/backup/directory
+```
+
+Rsync - Restore backup:
+```{bash eval=F}
+rsync -av user@remote_host:/path/to/backup/directory /path/to/mydirectory
+```
+
+Secure transfer of backup:
+```{bash eval=F}
+rsync -avz -e ssh /path/to/mydirectory user@backup_server:/path/to/backup/directory
+```
+
+### File management
+
+We can use the lsof command to list the open files on the file system.
+```{bash eval=F}
+lsof | grep "user"
+```
+
+If we find any processes that are using the file system, we need to stop them before we can unmount the file system. Additionally, we can also unmount a file system automatically when the system is shut down by adding an entry to the `/etc/fstab` file. The `/etc/fstab` file contains information about all the file systems that are mounted on the system, including the options for automatic mounting at boot time and other mount options. To unmount a file system automatically at shutdown, we need to add the `noauto` option to the entry in the `/etc/fstab` file for that file system.
+
+### Containerization
+
+Creating a Docker image is done by creating a Dockerfile, which contains all the instructions the Docker engine needs to create the container. We can use Docker containers as our “file hosting” server when transferring specific files to our target systems. Therefore, we must create a Dockerfile based on Ubuntu 22.04 with Apache and SSH server running. With this, we can use `scp` to transfer files to the docker image, and Apache allows us to host files and use tools like `curl`, `wget`, and others on the target system to download the required files. Such a Dockerfile could look like the following:
+```{bash eval=F}
+# Use the latest Ubuntu 22.04 LTS as the base image
+FROM ubuntu:22.04
+
+# Update the package repository and install the required packages
+RUN apt-get update && \
+    apt-get install -y \
+        apache2 \
+        openssh-server \
+        && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create a new user called "student"
+RUN useradd -m docker-user && \
+    echo "docker-user:password" | chpasswd
+
+# Give the htb-student user full access to the Apache and SSH services
+RUN chown -R docker-user:docker-user /var/www/html && \
+    chown -R docker-user:docker-user /var/run/apache2 && \
+    chown -R docker-user:docker-user /var/log/apache2 && \
+    chown -R docker-user:docker-user /var/lock/apache2 && \
+    usermod -aG sudo docker-user && \
+    echo "docker-user ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# Expose the required ports
+EXPOSE 22 80
+
+# Start the SSH and Apache services
+CMD service ssh start && /usr/sbin/apache2ctl -D FOREGROUND
+```
+
+Docker Build:
+```{bash eval=F}
+docker build -t FS_docker .
+```
+
+Docker Run:
+```{bash eval=F}
+# docker run -p <host port>:<docker port> -d <docker container name>
+docker run -p 8022:22 -p 8080:80 -d FS_docker
+```
+In this case, we start a new container from the image FS_docker and map the host ports 8022 and 8080 to container ports 22 and 80, respectively. The container runs in the background, allowing us to access the SSH and HTTP services inside the container using the specified host ports.
+
+When working with Docker images, it's important to note that any changes made to an existing image are not permanent. Instead, we need to create a new image that inherits from the original and includes the desired changes. This is done by creating a new Dockerfile that starts with the FROM statement, which specifies the base image, and then adds the necessary commands to make the desired changes. Once the Dockerfile is created, we can use the docker build command to build the new image, tagging it with a unique name to help identify it.
+
+It is important to note that Docker containers are designed to be immutable, meaning that any changes made to a container during runtime are lost when the container is stopped. Therefore, it is recommended to use container orchestration tools such as Docker Compose or Kubernetes to manage and scale containers in a production environment.
+
+Another framework to create containers is LXC (Linux Containers). It is different from Docker, and does not seem to be very used.
+
+Containers are useful, especially because they allow us to quickly spin up an isolated environment specific to our testing needs. For example, we might need to test a web application requiring a specific database or web server version. Rather than setting up these components on our machine, which can be time-consuming and error-prone, we can create a container that contains the exact configuration we need.
+
+We can also use them to test exploits or malware in a controlled environment where we create a container that simulates a vulnerable system or network and then use that container to safely test exploits without risking damaging our machines or networks. However, it is important to configure LXC container security to prevent unauthorized access or malicious activities inside the container. This can be achieved by implementing several security measures, such as:
+
+* Restricting access to the container
+
+* Limiting resources
+
+* Isolating the container from the host
+
+* Enforcing mandatory access control
+
+* Keeping the container up to date
+
+Let us limit the resources to the container. In order to configure `cgroups` for LXC and limit the CPU and memory, a container can create a new configuration file with the name of our container:
+```{bash eval=F}
+sudo vim /usr/share/lxc/config/linuxcontainer.conf
+```
+```{bash eval=F}
+lxc.cgroup.cpu.shares = 512     # 512/1024 = half of host's CPU time
+lxc.cgroup.memory.limit_in_bytes = 512M     # 512Mb of RAM available to the container
+```
+
+### Network Configuration
+
+Activate Network Interface
+```{bash eval=F}
+sudo ifconfig eth0 up     # OR
+sudo ip link set eth0 up
+```
+
+Assign IP Address to an Interface
+```{bash eval=F}
+sudo ifconfig eth0 192.168.1.2
+```
+
+Assign a Netmask to an Interface
+```{bash eval=F}
+sudo ifconfig eth0 netmask 255.255.255.0
+```
+
+Assign the Route to an Interface
+```{bash eval=F}
+sudo route add default gw 192.168.1.1 eth0
+```
+
+When configuring a network interface, it is often necessary to set Domain Name System (DNS) servers to ensure proper network functionality. DNS servers translate domain names into IP addresses, allowing devices to connect with each other on the internet. By setting those, we can ensure that their devices can communicate with other devices and access websites and other online resources. Without proper DNS server configuration, devices may experience network connectivity issues and be unable to access certain online resources. This can be achieved by updating the /etc/resolv.conf file with the appropriate DNS server information. The /etc/resolv.conf file is a plain text file containing the system's DNS information. The system can properly resolve domain names to IP addresses by adding the required DNS servers to this file. It is important to note that any changes made to this file will only apply to the current session and must be updated if the system is restarted or the network configuration is changed.
+
+Hardening mechanisms: SELinux, AppArmor and TCP wrappers.
+
+### Remote Desktop Protocols
+
+When a desktop is started on a Linux computer, the communication of the graphical user interface with the operating system happens via an X server. The computer's internal network is used, even if the computer should not be in a network. The practical thing about the X protocol is network transparency. This protocol mainly uses TCP/IP as a transport base but can also be used on pure Unix sockets. The ports that are utilized for X server are typically located in the range of TCP/6001-6009, allowing communication between the client and server. When starting a new desktop session via X server the TCP port 6000 would be opened for the first X display :0. This range of ports enables the server to perform its tasks such as hosting applications, as well as providing services to clients. They are often used to provide remote access to a system, allowing users to access applications and data from anywhere in the world. Additionally, these ports are also essential for the secure sharing of files and data, making them an integral part of the Open X Server. Thus an X server is not dependent on the local computer, it can be used to access other computers, and other computers can use the local X server. Provided that both local and remote computers contain Unix/Linux systems, additional protocols such as VNC and RDP are superfluous. VNC and RDP generate the graphical output on the remote computer and transport it over the network. Whereas with X11, it is rendered on the local computer. This saves traffic and a load on the remote computer. However, X11's significant disadvantage is the unencrypted data transmission. However, this can be overcome by tunneling the SSH protocol.
+
+For this, we have to allow X11 forwarding in the SSH configuration file (/etc/ssh/sshd_config) on the server that provides the application by changing this option to yes.
+
+```{bash eval=F}
+cat /etc/ssh/sshd_config | grep X11Forwarding
+```
+
+With this we can start the application from our client with the following command:
+```{bash eval=F}
+ssh -X htb-student@10.129.23.11 /usr/bin/firefox
+```
+
+X11 is not a secure protocol without suitable security measures since X11 communication is entirely unencrypted. A completely open X server lets anyone on the network read the contents of its windows, for example, and this goes unnoticed by the user sitting in front of it. Therefore, it is not even necessary to sniff the network. This standard X11 functionality is realized with simple X11 tools like xwd and xgrabsc. In short, as penetration testers, we could read users' keystrokes, obtain screenshots, move the mouse cursor and send keystrokes from the server over the network.
+
+A good example is several security vulnerabilities found in XServer, where a local attacker can exploit vulnerabilities in XServer to execute arbitrary code with user privileges and gain user privileges. The operating systems affected by these vulnerabilities were UNIX and Linux, Red Hat Enterprise Linux, Ubuntu Linux, and SUSE Linux. These vulnerabilities are known as CVE-2017-2624, CVE-2017-2625, and CVE-2017-2626.
+
+The X Display Manager Control Protocol (XDMCP) protocol is used by the X Display Manager for communication through UDP port 177 between X terminals and computers operating under Unix/Linux. It is used to manage remote X Window sessions on other machines and is often used by Linux system administrators to provide access to remote desktops. XDMCP is an insecure protocol and should not be used in any environment that requires high levels of security. With this, it is possible to redirect an entire graphical user interface (GUI) (such as KDE or Gnome) to a corresponding client.
+
+Virtual Network Computing (VNC) is a remote desktop sharing system based on the RFB protocol that allows users to control a computer remotely. It allows a user to view and interact with a desktop environment remotely over a network connection. The user can control the remote computer as if sitting in front of it. This is also one of the most common protocols for remote graphical connections for Linux hosts.
+
+VNC is generally considered to be secure. It uses encryption to ensure the data is safe while in transit and requires authentication before a user can gain access. Administrators make use of VNC to access computers that are not physically accessible.
+
+
+### Firewalls
+
+The most common used firewall in Linux is `iptables`. Study it later more deeply.
+
+### System Logs
+
+There are a variety of system logs, all located at `/var/log`. Some programs are `syslog`, `fail2ban`, kernel logs, etc.
+
+
+
+## 2. Nmap
+
+Option `-A` enables OS and version detection, script scanning and traceroute (it stands for aggressive).
+
+
+
+Option `-T4` is for faster execution.
+
+
+
+You can specify them with the `-T` option and their number (0–5) or their name. The template names are paranoid (0),
+sneaky (1), polite (2), normal (3), aggressive (4), and insane (5). The first two are for IDS evasion. Polite mode slows down the scan to use less bandwidth and target machine resources. Normal mode is the default and
+so `-T3` does nothing. Aggressive mode speeds scans up by making the assumption that you are on a reasonably fast and reliable network. Finally insane mode assumes that you are on an extraordinarily fast network or are
+willing to sacrifice some accuracy for speed.
+
+
+
+Option `-p` is to specify port ranges, and `-p-` to scan for all ports.
+
+
+
+Option `-sV` is to determine service/version info on open ports.
+
+
+
+Option `-O` enables OS detection.
+
+
+
+The `-P` options to nmap specify which "ping" methods it should use to see if a host is up. Option `-Pn` treats all hosts as online -- does not ping, and skip host discovery.
+
+
+
+Look at `-sS`. It says it performs a stealthy scan.
+
+Example:
+```{bash eval=F}
+nmap -A -T4 -sV "10.129.15.46"
+```
+
+Very fast scan:
+```{bash eval=F}
+nmap -T5 -A -p- --min-rate=500 10.129.44.239
+```
+
+
+## 3. Getting Started
+
+CIA triad: Confidentiality, integrity, and availability.
+
+Typing `netstat -rn` will show us the networks accessible via the VPN.
+
+There are three main types of shell connections:
+```{txt eval=F}
+Reverse shell 	Initiates a connection back to a "listener" on our attack box.
+Bind shell 	    "Binds" to a specific port on the target host and waits for a connection from our
+                attack box.
+Web shell 	    Runs operating system commands via the web browser, typically not interactive or
+                semi-interactive. It can also be used to run single commands (i.e., leveraging a
+                file upload vulnerability and uploading a PHP script to run a single command.
+```
+
+There are two categories of ports, Transmission Control Protocol (TCP), and User Datagram Protocol (UDP).
+TCP is connection-oriented, meaning that a connection between a client and a server must be established before data can be sent. The server must be in a listening state awaiting connection requests from clients.
+UDP utilizes a connectionless communication model. There is no "handshake" and therefore introduces a certain amount of unreliability since there is no guarantee of data delivery. UDP is useful when error correction/checking is either not needed or is handled by the application itself. UDP is suitable for applications that run time-sensitive tasks since dropping packets is faster than waiting for delayed packets due to retransmission, as is the case with TCP and can significantly affect a real-time system. There are 65,535 TCP ports and 65,535 different UDP ports, each denoted by a number. Some of the most well-known TCP and UDP ports are listed below:
+
+Banner grabbing with `netcat`:
+```{bash eval=F}
+nc <ip_address> <port>
+```
+
+When using `nmap`, sometimes we will see other ports listed that have a different state than `open`, such as `filtered`. This can happen if a firewall is only allowing access to the ports from specific addresses.
