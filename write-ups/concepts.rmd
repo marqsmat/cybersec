@@ -56,3 +56,5 @@ grep -i "open" scan.txt
 * What is the difference between `gobuster` options `vhost` and `dns`?
 
 * What is `netcat` and how does it work?
+
+* DNS servers. Why add arbitrary DNS servers to `/etc/hosts`, such as `8.8.8.8`?
