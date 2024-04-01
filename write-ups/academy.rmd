@@ -761,3 +761,46 @@ Now, the remote server should allow us to log in as that user by using our priva
 ssh root@10.10.10.10 -i key
 root@remotehost#
 ```
+
+#### Transferring Files
+
+There are many methods to accomplish this. One method is running a Python HTTP server on our machine and then using wget or cURL to download the file on the remote host.
+
+Another method to transfer files would be using SCP (Secure Copy Protocol), granted we have obtained ssh user credentials on the remote host. We can do so as follows:
+```{bash eval=F}
+scp linenum.sh user@remotehost:/tmp/linenum.sh
+```
+```{txt eval=F}
+user@remotehost's password: *********
+```
+
+In some cases, we may not be able to transfer the file. For example, the remote host may have firewall protections that prevent us from downloading a file from our machine. In this type of situation, we can use a simple trick to `base64` encode the file into `base64` format, and then we can paste the `base64` string on the remote server and decode it. For example, if we wanted to transfer a binary file called `shell`, we can `base64` encode it as follows:
+```{bash eval=F}
+base64 shell -w 0
+f0VMRgIBAQAAAAAAAAA... <SNIP> ...gAU0iJ51JXSInmDwU
+```
+
+Now, we can copy this `base64` string, go to the remote host, and use `base64 -d` to decode it, and pipe the output into a file:
+```{bash eval=F}
+user@remotehost$ echo "f0VMRgIBAQAAAAAAAAA... <SNIP> ...gAU0iJ51JXSInmDwU" | base64 -d > shell
+```
+
+To validate the format of a file, we can run the `file` command on it:
+```{bash eval=F}
+file shell
+shell: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, no section header
+```
+
+As we can see, when we run the file command on the shell file, it says that it is an ELF binary, meaning that we successfully transferred it. To ensure that we did not mess up the file during the encoding/decoding process, we can check its md5 hash. On our machine, we can run `md5sum` on it:
+```{bash eval=F}
+md5sum shell
+321de1d7e7c3735838890a72c9ae7d1d shell
+```
+
+Now, we can go to the remote server and run the same command on the file we transferred:
+```{bash eval=F}
+user@remotehost$ md5sum shell
+321de1d7e7c3735838890a72c9ae7d1d shell
+```
+
+As we can see, both files have the same md5 hash, meaning the file was transferred correctly.
