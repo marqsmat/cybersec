@@ -804,3 +804,27 @@ user@remotehost$ md5sum shell
 ```
 
 As we can see, both files have the same md5 hash, meaning the file was transferred correctly.
+
+#### Resources recommended by HTB
+
+```{txt eval=F}
+OWASP Juice Shop 	Is a modern vulnerable web application written in Node.js, Express, and Angular which
+                    showcases the entire OWASP Top Ten along with many other real-world application
+                    security flaws.
+Metasploitable 2 	Is a purposefully vulnerable Ubuntu Linux VM that can be used to practice enumeration,
+                    automated, and manual exploitation.
+Metasploitable 3 	Is a template for building a vulnerable Windows VM configured with a wide range of
+                    vulnerabilities.
+DVWA 	            This is a vulnerable PHP/MySQL web application showcasing many common web application
+                    vulnerabilities with varying degrees of difficulty.
+```
+
+It is worth learning how to set these up in your lab environment to gain extra practice setting up VMs and working with common configurations such as setting up a web server.
+
+One great blog worth checking out is [0xdf](https://0xdf.gitlab.io/) hacks stuff.
+
+Aside from blogs related to retired HTB boxes, it is also worth seeking out blog write-ups on recent exploits/attacks, Active Directory exploitation techniques, CTF event write-ups, and bug bounty report write-ups. These can all contain a wealth of information that may help connect some dots in our learning or even teach us something new that can come in handy on an assessment.
+
+Two great tutorial websites are [Under The Wire](https://underthewire.tech/wargames) and [Over The Wire](https://overthewire.org/wargames/). These websites are set up to help train users on using both Windows PowerShell and the Linux command line, respectively, through various scenarios in a "war games" format.
+
+The [Dante Pro Lab](https://app.hackthebox.com/prolabs/overview/dante) is the most beginner-friendly lab offered to date. This lab is geared towards players with some experience performing network and web application attacks and an understanding of networking concepts and the basics of penetration methodologies such as scanning/enumeration, lateral movement, privilege escalation, post-exploitation, etc.
