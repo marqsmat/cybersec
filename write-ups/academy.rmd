@@ -1137,3 +1137,7 @@ Many organizations use CloudFlare as they have a robust network that can withsta
 Relevant for the HTB machine `Headless`:
 
 Penetration Testers will configure reverse proxies on infected endpoints. The infected endpoint will listen on a port and send any client that connects to the port back to the attacker through the infected endpoint. This is useful to bypass firewalls or evade logging. Organizations may have IDS (Intrusion Detection Systems), watching external web requests. If the attacker gains access to the organization over SSH, a reverse proxy can send web requests through the SSH Tunnel and evade the IDS.
+
+### OSI and TCP/IP Reference Models
+
+![](fig/osi_tcpip.png)
