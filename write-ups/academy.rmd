@@ -1094,3 +1094,46 @@ root@gettingstarted:/tmp# cat /root/root.txt
 * Retired Challenges: Find The Easy Pass (E), Weak RSA (E), You know 0xDiablos (E), Emdee five for life (E), Under Construction (M).
 
 * Tracks: Beginner Track (E).
+
+
+
+## 4. Introduction to Networking
+
+### Introduction
+
+Printers should be on their own network. This may sound weird, but it is next to impossible to secure a printer. Due to how Windows works, if a printer tells a computer authentication is required during a print job, that computer will attempt an NTLMv2 authentication, which can lead to passwords being stolen. Additionally, these devices are great for persistence and, in general, have tons of sensitive information sent to them.
+
+#### Fun Story
+
+During COVID, I was tasked to perform a Physical Penetration Test across state lines, and my state was under a stay at home order. The company I was testing had minimal staff in the office. I decided to purchase an expensive printer and exploited it to put a reverse shell in it, so when it connected to the network, it would send me a shell (remote access). Then I shipped the printer to the company and sent a phishing email thanking the staff for coming in and explaining that the printer should allow them to print or scan things more quickly if they want to bring some stuff home to WFH for a few days. The printer was hooked up almost instantly, and their domain administrator's computer was kind enough to send the printer his credentials!
+
+If the client had designed a secure network, this attack probably would not have been possible for many reasons:
+
+* Printer should not have been able to talk to the internet.
+* Workstation should not have been able to communicate to the printer over port 445.
+* Printer should not be able to initiate connections to workstations. In some cases, printer/scanner combinations should be able to communicate to a mail server to email scanned documents.
+
+### Network Types
+
+Common Terminology
+```{txt eval=F}
+Network Type 	                    Definition
+Wide Area Network (WAN) 	        Internet
+Local Area Network (LAN) 	        Internal Networks (Ex: Home or Office)
+Wireless Local Area Network (WLAN) 	Internal Networks accessible over Wi-Fi
+Virtual Private Network (VPN) 	    Connects multiple network sites to one LAN
+```
+
+### Proxies
+
+A proxy is when a device or service sits in the middle of a connection and acts as a mediator. The mediator is the critical piece of information because it means the device in the middle must be able to inspect the contents of the traffic. Without the ability to be a mediator, the device is technically a gateway, not a proxy.
+
+If you have trouble remembering this, proxies will almost always operate at Layer 7 of the OSI Model.
+
+A reverse proxy, is the reverse of a Forward Proxy. Instead of being designed to filter outgoing requests, it filters incoming ones.
+
+Many organizations use CloudFlare as they have a robust network that can withstand most DDOS Attacks. By using Cloudflare, organizations have a way to filter the amount (and type) of traffic that gets sent to their webservers.
+
+Relevant for the HTB machine `Headless`:
+
+Penetration Testers will configure reverse proxies on infected endpoints. The infected endpoint will listen on a port and send any client that connects to the port back to the attacker through the infected endpoint. This is useful to bypass firewalls or evade logging. Organizations may have IDS (Intrusion Detection Systems), watching external web requests. If the attacker gains access to the organization over SSH, a reverse proxy can send web requests through the SSH Tunnel and evade the IDS.
