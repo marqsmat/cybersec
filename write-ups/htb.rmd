@@ -739,18 +739,28 @@ Submit user flag: 3e7b102e78218e935bf3f4951fec21a3.
 
 Submit root flag: b91ccec3305e98240082d4474b848528.
 
+### Oopsie `r fa("linux")`
 
-<!---
-known issue. You gotta find the lib files for your impacket.
-Mine was on /home/user/.local/lib/python3.8/site-packages/impacket/
+With what kind of tool can intercept web traffic?
 
-Edit your tds.py find both lines defining the ctx:
+What is the path to the directory on the webserver that returns a login page?
 
-ctx = SSL.Context(SSL.TLSv1_METHOD)
+What can be modified in Firefox to get access to the upload page?
 
-change it to
+What is the access ID of the admin user?
 
-ctx = SSL.Context(SSL.TLSv1_2_METHOD)
+On uploading a file, what directory does that file appear in on the server?
 
-Don’t forget to change both lines where this happens. Save and you’re done.
--->
+What is the file that contains the password that is shared with the robert user?
+
+What executible is run with the option "-group bugtracker" to identify all files owned by the bugtracker group?
+
+Regardless of which user starts running the bugtracker executable, what's user privileges will use to run?
+
+What SUID stands for?
+
+What is the name of the executable being called in an insecure manner?
+
+Submit user flag:
+
+Submit root flag:
