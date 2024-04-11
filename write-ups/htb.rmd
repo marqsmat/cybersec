@@ -836,3 +836,33 @@ root@vaccine:/var/lib/postgresql/11/main# cat /var/lib/postgresql/user.txt
 * Submit user flag: `ec9b13ca4d6229cd5cc1e09980965bf7`.
 
 * Submit root flag: `dd6e058e814260bc70e9bbdef2715849`.
+
+### Unified `r fa("linux")`
+
+* Which are the first four open ports? `22, 6789, 8080, 8443`.
+
+* What is the title of the software that is running running on port 8443? `UniFi Network`.
+
+* What is the version of the software that is running? `6.4.54`.
+
+* What is the CVE for the identified vulnerability? `CVE-2021-44228`.
+
+* What protocol does JNDI leverage in the injection? `LDAP`.
+
+* What tool do we use to intercept the traffic, indicating the attack was successful? `tcpdump`.
+
+* What port do we need to inspect intercepted traffic for? `389`.
+
+* What port is the MongoDB service running on?
+
+* What is the default database name for UniFi applications?
+
+* What is the function we use to enumerate users within the database in MongoDB?
+
+* What is the function we use to update users within the database in MongoDB?
+
+* What is the password for the root user?
+
+* Submit user flag:
+
+* Submit root flag:
