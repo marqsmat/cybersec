@@ -853,19 +853,19 @@ root@vaccine:/var/lib/postgresql/11/main# cat /var/lib/postgresql/user.txt
 
 * What port do we need to inspect intercepted traffic for? `389`.
 
-* What port is the MongoDB service running on?
+* What port is the MongoDB service running on? `27117`.
 
-* What is the default database name for UniFi applications?
+* What is the default database name for UniFi applications? `ace`.
 
-* What is the function we use to enumerate users within the database in MongoDB?
+* What is the function we use to enumerate users within the database in MongoDB? `db.admin.find()`.
 
-* What is the function we use to update users within the database in MongoDB?
+* What is the function we use to update users within the database in MongoDB? `db.admin.update()`.
 
-* What is the password for the root user?
+* What is the password for the root user? `NotACrackablePassword4U2022`.
 
-* Submit user flag:
+* Submit user flag: `6ced1a6a89e666c0620cdb10262ba127`.
 
-* Submit root flag:
+* Submit root flag: `e50bc93c75b634e4b272d2f771c33681`.
 
 ### TwoMillion `r fa("linux")`
 
