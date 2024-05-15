@@ -17,6 +17,10 @@ done
 grep -i "open" scan.txt
 ```
 
+* Meterpreter Metasploit.
+
+* WannaCry, EternalBlue, MS17-010.
+
 * What is LDAP, JNDI, analyze log4shell vulnerability deeply.
 
 * Why `nmap -Pn`, block ping probes.

