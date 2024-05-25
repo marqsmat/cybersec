@@ -17,6 +17,8 @@ done
 grep -i "open" scan.txt
 ```
 
+* `sudo nmap --script smb-vuln* -p 445  10.10.10.4` nmap scripts.
+
 * Meterpreter Metasploit.
 
 * WannaCry, EternalBlue, MS17-010.
