@@ -17,6 +17,8 @@ done
 grep -i "open" scan.txt
 ```
 
+* FIFO named pipe.
+
 * What is DNS Lookup, XXE and OAST?
 
 * `sudo nmap --script smb-vuln* -p 445  10.10.10.4` nmap scripts.
