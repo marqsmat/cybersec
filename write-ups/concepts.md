@@ -1,16 +1,7 @@
----
-title: CyberSec Concepts
-author: Mateus Marques
-output:
- html_document:
-  highlight: tango
-urlcolor: magenta
----
-
 # Needs research
 
 * OpenSSL. Why [configure like this](https://help.heroku.com/88GYDTB2/how-do-i-configure-openssl-to-allow-the-use-of-legacy-cryptographic-algorithms)?
-```{bash eval=F}
+```bash
 for port in $(cat ports9.txt) ; do
   nmap -p $port 10.129.70.15 >> scan.txt
 done

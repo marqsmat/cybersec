@@ -1,12 +1,3 @@
----
-title: Hack This Site
-author: Mateus Marques
-output:
- html_document:
-  highlight: tango
-urlcolor: magenta
----
-
 ## Basic
 
 ### Level 1
@@ -20,7 +11,7 @@ If he did not upload the password file, the password is a blank entry.
 ### Level 3
 
 Viewing page source, we see the entry
-```{html eval=F}
+```html
 <input type="hidden" name="file" value="password.php" />
 ```
 
@@ -29,7 +20,7 @@ Therefore, we just go to `https://www.hackthissite.org/missions/basic/3/password
 ### Level 4
 
 Use `firefox` to click "Inspect" on the "Send password to Sam" button. Edit the email address value
-```{html eval=F}
+```html
 <input type="hidden" name="to" value="your@email.com">
 ```
 and click "Send password to Sam" button. The password `a825fedf` will be sent to your email.
@@ -46,7 +37,7 @@ The encrypted password is `e39i5fh>`.
 If I put `aaaaaaaa` as input, the output is `abcdefgh`.
 
 So, the password has 8 letters and the encryption algorithm just sums $i$ to the $i$-th char in the string (ASCII format). We then write a little `decrypt.c` program that subtracts $i$ to the $i$-th char (the inverse process).
-```{c eval=F}
+```c
 #include <stdio.h>
 int main() {
     char passwd[9];
@@ -70,7 +61,7 @@ Going to `https://www.hackthissite.org/missions/basic/7/k1kh31b1n55h.php`, the p
 Look at [OWASP SSI](https://owasp.org/www-community/attacks/Server-Side_Includes_(SSI)_Injection)
 
 The SSI to use is
-```{php eval=F}
+```php
 <!--#exec cmd="ls" -->
 ```
 
@@ -79,7 +70,7 @@ The obscured file is `https://www.hackthissite.org/missions/basic/8/au12ha39vc.p
 ### Level 9
 
 Go back to level 8 and use the following SSI:
-```{php eval=F}
+```php
 <!--#exec cmd="ls ../../9" -->
 ```
 
@@ -92,13 +83,13 @@ Use Firefox Inspect, go to the Storage/Cookies section and change `level10_autho
 ### Level 11
 
 Directory enumeration with `gobuster`:
-```{bash eval=F}
+```bash
 gobuster dir -x php -w Workspace/wordlists/directory-list-2.3-small.txt \
 -u https://www.hackthissite.org/missions/basic/11/
 ```
 
 The file `index.php` and directory `e/` exist. Going to `https://www.hackthissite.org/missions/basic/11/e`, we are prompted to go to the directory `e/l/t/o/n`. Knowing that Sam uses `apache`, we search for `.htaccess` in this directory. We get
-```{html eval=F}
+```html
 IndexIgnore DaAnswer.* .htaccess
 <Files .htaccess>
 require all granted
@@ -106,7 +97,7 @@ require all granted
 ```
 
 The file `DaAnswer` seems suspicious, so we go to `https://www.hackthissite.org/missions/basic/11/e/l/t/o/n/DaAnswer`. We get
-```{bash eval=F}
+```bash
 The answer is somewhere! Just look a little harder.
 ```
 This is a charade. The password is `somewhere`. Go to `index.php` and submit it. The level is completed.
